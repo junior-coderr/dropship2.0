@@ -6,6 +6,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { Playfair_Display } from 'next/font/google';
 import { Sora, DM_Sans } from 'next/font/google';
 import TopLoader from '@/components/TopLoader';
+import { Toaster } from 'react-hot-toast';
 
 const playfair = Playfair_Display({ subsets: ['latin'] });
 
@@ -37,6 +38,22 @@ export default function RootLayout({ children }) {
               {children}
             </main>
             <MobileNav />
+            <Toaster 
+              position="top-center"
+              toastOptions={{
+                duration: 3000,
+                style: {
+                  background: '#333',
+                  color: '#fff',
+                },
+                success: {
+                  iconTheme: {
+                    primary: '#53D695',
+                    secondary: '#fff',
+                  },
+                },
+              }}
+            />
           </CartProvider>
         </AuthProvider>
       </body>

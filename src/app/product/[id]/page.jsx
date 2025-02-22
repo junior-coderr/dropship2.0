@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { CaretLeft, ShoppingBag, Truck, ArrowsClockwise, X, Lightning } from 'phosphor-react';
@@ -37,6 +37,62 @@ export default function ProductDetail({ params }) {
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const imageRef = useRef(null);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const [slidePosition, setSlidePosition] = useState(0);
+
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    if (isZoomed) return; // Don't allow swiping when zoomed
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+    setIsSwiping(true);
+  };
+
+  const onTouchMove = (e) => {
+    if (isZoomed || !isSwiping) return; // Don't allow swiping when zoomed
+    setTouchEnd(e.targetTouches[0].clientX);
+    const diff = touchStart - e.targetTouches[0].clientX;
+    setSlidePosition(-diff);
+  };
+
+  const onTouchEnd = () => {
+    if (isZoomed) return; // Don't allow swiping when zoomed
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe && selectedImage < product.images.length - 1) {
+      setSelectedImage(prev => prev + 1);
+    }
+    if (isRightSwipe && selectedImage > 0) {
+      setSelectedImage(prev => prev - 1);
+    }
+
+    setTouchStart(null);
+    setTouchEnd(null);
+    setIsSwiping(false);
+    setSlidePosition(0);
+  };
+
+  // Update slidePosition when selectedImage changes
+  useEffect(() => {
+    setSlidePosition(0);
+  }, [selectedImage]);
+
+  // Set default selections when component mounts
+  useEffect(() => {
+    if (product.hasSizes && product.sizes.length > 0) {
+      setSelectedSize(product.sizes[0]); // Set first size as default
+    }
+    if (product.hasColors && product.colors.length > 0) {
+      setSelectedColor(product.colors[0]); // Set first color as default
+    }
+  }, []); // Run once when component mounts
 
   const handleImageClick = () => {
     if (window.innerWidth < 768) { // Mobile devices
@@ -54,33 +110,24 @@ export default function ProductDetail({ params }) {
   };
 
   const handleAddToCart = () => {
-    if (product.hasSizes && !selectedSize) {
-      alert('Please select a size');
-      return;
-    }
     addToCart({
       id: product.id,
       name: product.name,
       price: product.price,
       image: product.images[0],
-      size: selectedSize,
-      color: selectedColor
+      size: selectedSize || product.sizes[0], // Fallback to first size
+      color: selectedColor || product.colors[0] // Fallback to first color
     });
   };
 
   const handleBuyNow = () => {
-    if (product.hasSizes && !selectedSize) {
-      alert('Please select a size');
-      return;
-    }
-    // Add to cart first
     addToCart({
       id: product.id,
       name: product.name,
       price: product.price,
       image: product.images[0],
-      size: selectedSize,
-      color: selectedColor
+      size: selectedSize || product.sizes[0], // Fallback to first size
+      color: selectedColor || product.colors[0] // Fallback to first color
     });
     // Navigate to checkout
     router.push('/cart');
@@ -117,12 +164,13 @@ export default function ProductDetail({ params }) {
         <div className="space-y-4">
           <div 
             ref={imageRef}
-            className={`relative aspect-square rounded-2xl overflow-hidden bg-gray-100 ${
-              window.innerWidth >= 768 ? 'cursor-zoom-in' : ''
-            }`}
+            className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100"
             onClick={handleImageClick}
             onMouseMove={handleMouseMove}
             onMouseLeave={() => setZoomPosition({ x: 0, y: 0 })}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
           >
             {/* Mobile Zoom Modal */}
             {isZoomed && window.innerWidth < 768 && (
@@ -142,19 +190,44 @@ export default function ProductDetail({ params }) {
                 />
               </div>
             )}
-            
-            {/* Desktop Zoom Effect */}
-            <Image
-              src={product.images[selectedImage]}
-              alt={product.name}
-              fill
-              className="object-cover transition-transform duration-200"
+
+            {/* Mobile swipeable image */}
+            <div 
+              className={`md:hidden w-full h-full relative transition-transform ${isZoomed ? 'hidden' : ''}`}
               style={{
-                transform: window.innerWidth >= 768 && zoomPosition.x ? 'scale(1.5)' : 'scale(1)',
-                transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`
+                transform: `translateX(${slidePosition}px)`,
               }}
-              priority
-            />
+            >
+              <Image
+                src={product.images[selectedImage]}
+                alt={product.name}
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+
+            {/* Desktop image with zoom */}
+            <div className="hidden md:block w-full h-full relative">
+              <Image
+                src={product.images[selectedImage]}
+                alt={product.name}
+                fill
+                className="object-cover transition-transform duration-200"
+                style={{
+                  transform: window.innerWidth >= 768 && zoomPosition.x ? 'scale(1.5)' : 'scale(1)',
+                  transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`
+                }}
+                priority
+              />
+            </div>
+
+            {/* Image counter for mobile */}
+            {!isZoomed && (
+              <div className="md:hidden absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                {selectedImage + 1} / {product.images.length}
+              </div>
+            )}
           </div>
           
           {/* Thumbnails */}
@@ -246,24 +319,24 @@ export default function ProductDetail({ params }) {
             </ul>
           </div>
 
-          {/* Features */}
+          {/* Updated Features */}
           <div className="grid grid-cols-2 gap-4 pt-4">
             <div className="flex items-center gap-3 p-3 rounded-xl border border-gray-100">
               <div className="p-2 rounded-lg bg-[#53D695]/10">
-                <Truck size={20} className="text-[#53D695]" />
+                <Truck weight="bold" size={20} className="text-[#53D695]" />
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-900">Free Delivery</p>
-                <p className="text-xs text-gray-500">Orders over $50</p>
+                <p className="text-sm text-[#53D695] font-medium">8-10 business days</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 rounded-xl border border-gray-100">
               <div className="p-2 rounded-lg bg-[#53D695]/10">
-                <ArrowsClockwise size={20} className="text-[#53D695]" />
+                <ArrowsClockwise weight="bold" size={20} className="text-[#53D695]" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">Free Returns</p>
-                <p className="text-xs text-gray-500">Within 30 days</p>
+                <p className="text-sm font-medium text-gray-900">7 Days Return</p>
+                <p className="text-sm text-[#53D695] font-medium">Easy & Free Returns</p>
               </div>
             </div>
           </div>

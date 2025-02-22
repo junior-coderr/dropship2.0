@@ -25,6 +25,17 @@ export default function Hero() {
     return () => clearInterval(interval);
   }, []);
 
+  const scrollToFeatured = (e) => {
+    e.preventDefault();
+    const featuredSection = document.getElementById('featured-products');
+    if (featuredSection) {
+      featuredSection.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  };
+
   return (
     <div className="my-4 sm:my-12">
       <div className="relative h-[420px] sm:h-[650px] rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden">
@@ -67,8 +78,9 @@ export default function Hero() {
               </p>
             </div>
 
-            <Link 
-              href="/products" 
+            <a 
+              href="#featured-products"
+              onClick={scrollToFeatured}
               className="group/btn inline-flex items-center px-7 sm:px-10 py-3.5 sm:py-5 bg-white text-brand-black 
                 rounded-full font-bold transition-all duration-200
                 shadow-md hover:shadow-xl hover:scale-105 text-sm sm:text-base"
@@ -82,7 +94,7 @@ export default function Hero() {
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-            </Link>
+            </a>
           </div>
 
           <div className="absolute top-12 right-12 w-28 h-28 border-4 border-white/10 rounded-full"></div>

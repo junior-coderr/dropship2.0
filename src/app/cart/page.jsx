@@ -2,10 +2,12 @@
 import { useCart } from '@/context/CartContext';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MinusCircle, PlusCircle, Trash, ShoppingBag, ArrowRight } from 'phosphor-react';
+import { MinusCircle, PlusCircle, Trash, ShoppingBag, ArrowRight, Truck, ArrowsClockwise } from 'phosphor-react';
+import { useRouter } from 'next/navigation';
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity } = useCart();
+  const router = useRouter();
 
   const total = cart.reduce((acc, item) => acc + (item.price * (item.quantity || 1)), 0);
 
@@ -124,9 +126,51 @@ export default function CartPage() {
               </div>
             </div>
           ))}
+
+          {/* Updated Delivery Details with estimated time */}
+          <div className="mt-6 bg-white rounded-xl border border-gray-100 overflow-hidden">
+            <div className="p-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-medium text-gray-900">Delivery Details</h3>
+                  <div className="mt-2 space-y-1 text-sm text-gray-500">
+                    <p>John Doe</p>
+                    <p>+1 234 567 8900</p>
+                    <p>123 Street Name, City, State, 12345</p>
+                    <br />
+                     <div className="flex flex-wrap gap-1">
+          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+            <div className="p-4">
+              <div className="flex gap-3 items-start">
+                <div className="p-2 rounded-lg bg-[#53D695]/10">
+                  <Truck weight="bold" size={20} className="text-[#53D695]" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-900">Free Delivery</h3>
+                  <p className="mt-1 text-sm text-[#53D695] font-medium">
+                    Estimated 8-10 business days
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        
+        </div>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => router.push('/profile/edit')}
+                  className="text-[#53D695] text-sm font-medium hover:underline"
+                >
+                  Edit
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Order Summary - Updated position */}
+        {/* Order Summary */}
         <div className="sticky top-20 h-fit bg-white p-5 rounded-xl border border-gray-100 shadow-sm lg:top-8">
           <h2 className="text-lg font-bold text-gray-900 mb-4">Order Summary</h2>
           <div className="space-y-3">
@@ -144,9 +188,12 @@ export default function CartPage() {
               <span className="font-bold text-gray-900">${total.toFixed(2)}</span>
             </div>
           </div>
-          <button className="w-full mt-6 px-6 py-3.5 bg-[#53D695] text-white font-medium rounded-full hover:bg-[#53D695]/90 transition-colors">
+          <Link 
+            href="/checkout"
+            className="w-full mt-6 px-6 py-3.5 bg-[#53D695] text-white font-medium rounded-full hover:bg-[#53D695]/90 transition-colors inline-block text-center"
+          >
             Proceed to Checkout
-          </button>
+          </Link>
           <p className="mt-3 text-xs text-center text-gray-500">
             Free shipping on all orders over $50
           </p>

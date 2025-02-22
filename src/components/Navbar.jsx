@@ -3,13 +3,16 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import { ShoppingBag, User, Package, SignOut, List, Heart } from 'phosphor-react';
+import { ShoppingBag, User, Package, SignOut, List, Heart, ChartLine } from 'phosphor-react';
+import AuthDrawer from './auth/AuthDrawer';
+import toast from 'react-hot-toast';
 
 export default function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const { cart } = useCart();
-  const { user, logout } = useAuth();
+  const { user, signOut, openAuthDrawer, isAuthDrawerOpen, closeAuthDrawer } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -22,101 +25,156 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLogout = async () => {
-    await logout();
+  const handleAuthAction = async () => {
+    if (user) {
+      const success = await signOut();
+      if (success) {
+        // Optionally redirect to home page
+        window.location.href = '/';
+      }
+    } else {
+      openAuthDrawer();
+    }
     setIsDropdownOpen(false);
   };
 
-  return (
-    <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
-      <div className="container mx-auto px-4 py-2.5">
-        <div className="flex items-center justify-between">
-          {/* Logo section */}
-          <Link href="/" className="flex items-center gap-1.5 group">
-            <Heart 
-              weight="fill" 
-              className="w-5 h-5 text-[#53D695] transform -rotate-12 group-hover:scale-110 transition-transform duration-200" 
-            />
-            <div className="flex flex-col -space-y-0.5">
-              <span className="text-xl font-bold text-gray-800 tracking-tight font-sora  transition-colors duration-200">
-                cupidcart
-              </span>
-              <span className="text-[0.6rem] tracking-[0.15em] text-[#53D695] uppercase font-dm-sans font-bold ml-[0.1em]">
-                .in
-              </span>
-            </div>
-          </Link>
+  const LogoutButton = () => (
+    <button
+      onClick={handleAuthAction}
+      disabled={isLoggingOut}
+      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+    >
+      <SignOut size={18} className={isLoggingOut ? 'animate-spin' : ''} />
+      {isLoggingOut ? 'Logging out...' : 'Logout'}
+    </button>
+  );
 
-          <div className="flex items-center gap-5">
-            {/* Cart icon - only visible on desktop */}
-            <Link 
-              href="/cart" 
-              className="relative p-2.5 hover:bg-gray-50 rounded-full transition-all duration-200 group hidden sm:block"
-            >
-              <ShoppingBag 
-                size={24} 
-                weight="regular"
-                className="text-gray-700 transition-transform duration-200 group-hover:scale-110 group-hover:text-[#53D695]" 
+  return (
+    <>
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
+        <div className="container mx-auto px-4 py-2.5">
+          <div className="flex items-center justify-between">
+            {/* Logo section */}
+            <Link href="/" className="flex items-center gap-1.5 group">
+              <Heart 
+                weight="fill" 
+                className="w-5 h-5 text-[#53D695] transform -rotate-12 group-hover:scale-110 transition-transform duration-200" 
               />
-              {cart.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#53D695] text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium animate-in shadow-sm">
-                  {cart.length}
+              <div className="flex flex-col -space-y-0.5">
+                <span className="text-xl font-bold text-gray-800 tracking-tight font-sora  transition-colors duration-200">
+                  cupidcart
                 </span>
-              )}
+                <span className="text-[0.6rem] tracking-[0.15em] text-[#53D695] uppercase font-dm-sans font-bold ml-[0.1em]">
+                  .in
+                </span>
+              </div>
             </Link>
 
-
-            {/* User menu */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="p-2.5 hover:bg-gray-50 rounded-full transition-all duration-200 group"
+            <div className="flex items-center gap-5">
+              {/* Cart icon - only visible on desktop */}
+              <Link 
+                href="/cart" 
+                className="relative p-2.5 hover:bg-gray-50 rounded-full transition-all duration-200 group hidden sm:block"
               >
-                <User 
+                <ShoppingBag 
                   size={24} 
                   weight="regular"
                   className="text-gray-700 transition-transform duration-200 group-hover:scale-110 group-hover:text-[#53D695]" 
                 />
-              </button>
+                {cart.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-[#53D695] text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium animate-in shadow-sm">
+                    {cart.length}
+                  </span>
+                )}
+              </Link>
 
-              {/* Dropdown Menu */}
-              {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 animate-in fade-in slide-in-from-top-5">
-                  {/* Desktop Menu Items */}
-                  <div className="hidden sm:block">
-                    <Link
-                      href="/orders"
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                      onClick={() => setIsDropdownOpen(false)}
-                    >
-                      <Package size={18} />
-                      Orders
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                    >
-                      <SignOut size={18} />
-                      Logout
-                    </button>
-                  </div>
+              {/* User menu */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="p-2.5 hover:bg-gray-50 rounded-full transition-all duration-200 group"
+                >
+                  <User 
+                    size={24} 
+                    weight={user ? "fill" : "regular"}
+                    className="text-gray-700 transition-transform duration-200 group-hover:scale-110 group-hover:text-[#53D695]" 
+                  />
+                </button>
 
-                  {/* Mobile Menu Items */}
-                  <div className="sm:hidden">
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                    >
-                      <SignOut size={18} />
-                      Logout
-                    </button>
+                {/* Dropdown Menu */}
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 animate-in fade-in slide-in-from-top-5">
+                    {/* Desktop Menu Items */}
+                    <div className="hidden sm:block">
+                      {user ? (
+                        <>
+                          {user.role === 'admin' && (
+                            <Link
+                              href="/admin"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                              onClick={() => setIsDropdownOpen(false)}
+                            >
+                              <ChartLine size={18} />
+                              Admin Dashboard
+                            </Link>
+                          )}
+                          <Link
+                            href="/orders"
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                            onClick={() => setIsDropdownOpen(false)}
+                          >
+                            <Package size={18} />
+                            Orders
+                          </Link>
+                          <LogoutButton />
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => handleAuthAction()}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          <User size={18} />
+                          Login / Register
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Mobile Menu Items */}
+                    <div className="sm:hidden">
+                      {user ? (
+                        <>
+                          {user.role === 'admin' && (
+                            <Link
+                              href="/admin"
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                              onClick={() => setIsDropdownOpen(false)}
+                            >
+                              <ChartLine size={18} />
+                              Admin Dashboard
+                            </Link>
+                          )}
+                          <LogoutButton />
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => handleAuthAction()}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          <User size={18} />
+                          Login / Register
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+      
+      {/* Auth Drawer */}
+      <AuthDrawer isOpen={isAuthDrawerOpen} onClose={closeAuthDrawer} />
+    </>
   );
 }
