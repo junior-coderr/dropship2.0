@@ -1,0 +1,14 @@
+// Format price to currency string
+export const formatPrice = (price) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(price);
+};
+
+// Generate image placeholder
+export const getImagePlaceholder = () => {
+  return "data:image/svg+xml,...";
+};
+
+// Other utility functions can be added here
