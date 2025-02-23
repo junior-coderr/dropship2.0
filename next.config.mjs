@@ -4,6 +4,14 @@ const nextConfig = {
   images: {
     domains: ["images.unsplash.com"],
   },
+  experimental: {
+    serverActions: true,
+  },
+  api: {
+    bodyParser: {
+      sizeLimit: "5mb",
+    },
+  },
 };
 
 export default nextConfig;

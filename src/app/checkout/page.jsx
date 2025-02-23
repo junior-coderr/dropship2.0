@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { CaretLeft, MapPin, CreditCard, Money, CheckCircle, Truck, ArrowsClockwise } from 'phosphor-react';
 import { useCart } from '@/context/CartContext';
@@ -8,8 +8,32 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { cart } = useCart();
   const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [userProfile, setUserProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
   
   const total = cart.reduce((acc, item) => acc + (item.price * (item.quantity || 1)), 0);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch('/api/user/profile', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          }
+        });
+        const data = await response.json();
+        if (data.success) {
+          setUserProfile(data.user);
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   const handleConfirmOrder = () => {
     // Handle order confirmation
@@ -41,11 +65,24 @@ export default function CheckoutPage() {
                 </div>
                 <div>
                   <h3 className="font-medium text-gray-900">Delivery Address</h3>
-                  <div className="mt-2 space-y-1 text-sm text-gray-500">
-                    <p>John Doe</p>
-                    <p>+1 234 567 8900</p>
-                    <p>123 Street Name, City, State, 12345</p>
-                  </div>
+                  {loadingProfile ? (
+                    <div className="animate-pulse space-y-2 mt-2">
+                      <div className="h-4 bg-gray-200 rounded w-32"></div>
+                      <div className="h-4 bg-gray-200 rounded w-48"></div>
+                    </div>
+                  ) : userProfile ? (
+                    <div className="mt-2 space-y-1 text-sm text-gray-500">
+                      <p>{userProfile.name}</p>
+                      <p>{userProfile.phone}</p>
+                      <p>
+                        {userProfile.address?.street}, 
+                        {userProfile.address?.city}, 
+                        {userProfile.address?.state} {userProfile.address?.zipCode}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-sm text-gray-500">No address information available</p>
+                  )}
                 </div>
               </div>
               <button 

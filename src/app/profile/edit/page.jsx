@@ -1,19 +1,53 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { CaretLeft } from 'phosphor-react';
+import { toast } from 'react-hot-toast';
 
 export default function EditProfilePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect');
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
-    fullName: 'John Doe',
-    email: 'john@example.com',
-    phone: '+1 234 567 8900',
-    address: '123 Street Name',
-    city: 'City',
-    state: 'State',
-    zipCode: '12345',
+    fullName: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    zipCode: '',
   });
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch('/api/user/profile', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        setFormData({
+          fullName: data.user.name || '',
+          phone: data.user.phone || '',
+          address: data.user.address?.street || '',
+          city: data.user.address?.city || '',
+          state: data.user.address?.state || '',
+          zipCode: data.user.address?.zipCode || '',
+        });
+      }
+    } catch (error) {
+      toast.error('Failed to load profile');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,12 +57,49 @@ export default function EditProfilePage() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log('Form submitted:', formData);
-    router.back();
+    try {
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: formData.fullName,
+          phone: formData.phone,
+          address: {
+            street: formData.address,
+            city: formData.city,
+            state: formData.state,
+            zipCode: formData.zipCode
+          }
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        toast.success('Profile updated successfully');
+        if (redirectTo === 'checkout') {
+          router.push('/checkout');
+        } else {
+          router.back();
+        }
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (error) {
+      toast.error('Failed to update profile');
+      console.error(error);
+    }
   };
+
+  if (loading) {
+    return <div className="flex justify-center items-center min-h-screen">
+      <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#53D695] border-t-transparent"></div>
+    </div>;
+  }
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -58,21 +129,6 @@ export default function EditProfilePage() {
                 id="fullName"
                 name="fullName"
                 value={formData.fullName}
-                onChange={handleChange}
-                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#53D695]/20 focus:border-[#53D695] transition-colors"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
                 onChange={handleChange}
                 className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#53D695]/20 focus:border-[#53D695] transition-colors"
                 required

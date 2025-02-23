@@ -3,6 +3,8 @@ const nextConfig = {
   images: {
     domains: [
       "images.unsplash.com",
+      "dropshipimgs.blob.core.windows.net",
+
       // Add other image domains here if needed
     ],
     remotePatterns: [

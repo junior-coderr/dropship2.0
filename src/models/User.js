@@ -27,6 +27,24 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    address: {
+      street: {
+        type: String,
+        trim: true,
+      },
+      city: {
+        type: String,
+        trim: true,
+      },
+      state: {
+        type: String,
+        trim: true,
+      },
+      zipCode: {
+        type: String,
+        trim: true,
+      },
+    },
   },
   {
     timestamps: true,

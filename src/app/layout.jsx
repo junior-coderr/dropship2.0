@@ -7,6 +7,7 @@ import { Playfair_Display } from 'next/font/google';
 import { Sora, DM_Sans } from 'next/font/google';
 import TopLoader from '@/components/TopLoader';
 import { Toaster } from 'react-hot-toast';
+import { CountdownProvider } from '@/context/CountdownContext';
 
 const playfair = Playfair_Display({ subsets: ['latin'] });
 
@@ -30,32 +31,34 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${sora.variable} ${dmSans.variable} font-dm-sans pb-24 sm:pb-0`}>
-        <AuthProvider>
-          <CartProvider>
-            <TopLoader />
-            <Navbar />
-            <main className="container mx-auto px-4 py-8">
-              {children}
-            </main>
-            <MobileNav />
-            <Toaster 
-              position="top-center"
-              toastOptions={{
-                duration: 3000,
-                style: {
-                  background: '#333',
-                  color: '#fff',
-                },
-                success: {
-                  iconTheme: {
-                    primary: '#53D695',
-                    secondary: '#fff',
+        <CountdownProvider>
+          <AuthProvider>
+            <CartProvider>
+              <TopLoader />
+              <Navbar />
+              <main className="container mx-auto px-4 py-8">
+                {children}
+              </main>
+              <MobileNav />
+              <Toaster 
+                position="top-center"
+                toastOptions={{
+                  duration: 3000,
+                  style: {
+                    background: '#333',
+                    color: '#fff',
                   },
-                },
-              }}
-            />
-          </CartProvider>
-        </AuthProvider>
+                  success: {
+                    iconTheme: {
+                      primary: '#53D695',
+                      secondary: '#fff',
+                    },
+                  },
+                }}
+              />
+            </CartProvider>
+          </AuthProvider>
+        </CountdownProvider>
       </body>
     </html>
   );

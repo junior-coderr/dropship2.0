@@ -2,12 +2,66 @@
 import { useCart } from '@/context/CartContext';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MinusCircle, PlusCircle, Trash, ShoppingBag, ArrowRight, Truck, ArrowsClockwise } from 'phosphor-react';
+import { MinusCircle, PlusCircle, Trash, ShoppingBag, ArrowCircleLeft, Truck, ArrowsClockwise } from 'phosphor-react';
 import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import CountdownTimer from '@/components/CountdownTimer';
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateQuantity } = useCart();
+  const { cart, removeFromCart, updateQuantity, loadingItems } = useCart();
   const router = useRouter();
+  const [hasAddress, setHasAddress] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+
+  useEffect(() => {
+    // Check if user has address (you'll need to implement this API endpoint)
+    const checkUserAddress = async () => {
+      try {
+        const response = await fetch('/api/user/check-address',{
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          }
+        });
+        const data = await response.json();
+        setHasAddress(Boolean(data.hasAddress));
+      } catch (error) {
+        console.error('Error checking address:', error);
+      }
+    };
+
+    checkUserAddress();
+  }, []);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch('/api/user/profile', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          }
+        });
+        const data = await response.json();
+        if (data.success) {
+          setUserProfile(data.user);
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
+  const handleCheckout = () => {
+    if (!userProfile?.address?.street) {
+      router.push('/profile/edit?redirect=checkout');
+    } else {
+      router.push('/checkout');
+    }
+  };
 
   const total = cart.reduce((acc, item) => acc + (item.price * (item.quantity || 1)), 0);
 
@@ -37,10 +91,10 @@ export default function CartPage() {
         </h1>
         <Link 
           href="/"
-          className="hidden sm:flex items-center gap-1 text-sm text-[#53D695] font-medium hover:underline"
+          className="hidden sm:flex items-center gap-2 text-sm text-[#53D695] font-medium hover:opacity-80 transition-opacity"
         >
+          <ArrowCircleLeft size={20} weight="bold" />
           Continue Shopping
-          <ArrowRight size={16} />
         </Link>
       </div>
 
@@ -54,12 +108,13 @@ export default function CartPage() {
               <div className="p-4">
                 <div className="flex gap-3 sm:gap-4">
                   {/* Product Image */}
+                  {console.log('item', item)}
                   <Link 
                     href={`/product/${item.id}`}
                     className="relative h-20 w-20 sm:h-24 sm:w-24 flex-shrink-0 rounded-lg overflow-hidden group"
                   >
                     <Image
-                      src={item.image}
+                      src={item?.images[0].url}
                       alt={item.name}
                       fill
                       className="object-cover transition-transform duration-300 group-hover:scale-110"
@@ -90,7 +145,7 @@ export default function CartPage() {
                         </div>
                       </div>
                       <button
-                        onClick={() => removeFromCart(item.id)}
+                        onClick={() => removeFromCart(item.id, item.size, item.color)}
                         className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 h-fit"
                       >
                         <Trash size={18} />
@@ -102,17 +157,22 @@ export default function CartPage() {
                       <div className="flex items-center gap-1 p-1 bg-gray-50 rounded-lg">
                         <button 
                           className="p-1.5 text-gray-400 hover:text-[#53D695] transition-colors disabled:opacity-50"
-                          onClick={() => updateQuantity(item.id, item.size, item.color, (item.quantity || 1) - 1)}
-                          disabled={(item.quantity || 1) <= 1}
+                          onClick={() => updateQuantity(item.id, item.size, item.color, Math.max(1, (item.quantity || 1) - 1))}
+                          disabled={(item.quantity || 1) <= 1 || loadingItems.has(`${item.id}-${item.size}-${item.color}`)}
                         >
                           <MinusCircle size={16} weight="bold" />
                         </button>
                         <span className="w-8 text-center text-sm font-medium">
-                          {item.quantity || 1}
+                          {loadingItems.has(`${item.id}-${item.size}-${item.color}`) ? (
+                            <div className="w-4 h-4 border-2 border-[#53D695] border-t-transparent rounded-full animate-spin mx-auto" />
+                          ) : (
+                            item.quantity || 1
+                          )}
                         </span>
                         <button 
                           className="p-1.5 text-gray-400 hover:text-[#53D695] transition-colors"
                           onClick={() => updateQuantity(item.id, item.size, item.color, (item.quantity || 1) + 1)}
+                          disabled={loadingItems.has(`${item.id}-${item.size}-${item.color}`)}
                         >
                           <PlusCircle size={16} weight="bold" />
                         </button>
@@ -133,30 +193,40 @@ export default function CartPage() {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="font-medium text-gray-900">Delivery Details</h3>
-                  <div className="mt-2 space-y-1 text-sm text-gray-500">
-                    <p>John Doe</p>
-                    <p>+1 234 567 8900</p>
-                    <p>123 Street Name, City, State, 12345</p>
-                    <br />
-                     <div className="flex flex-wrap gap-1">
-          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-            <div className="p-4">
-              <div className="flex gap-3 items-start">
-                <div className="p-2 rounded-lg bg-[#53D695]/10">
-                  <Truck weight="bold" size={20} className="text-[#53D695]" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-900">Free Delivery</h3>
-                  <p className="mt-1 text-sm text-[#53D695] font-medium">
-                    Estimated 8-10 business days
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        
-        </div>
+                  {loadingProfile ? (
+                    <div className="animate-pulse space-y-2 mt-2">
+                      <div className="h-4 bg-gray-200 rounded w-32"></div>
+                      <div className="h-4 bg-gray-200 rounded w-48"></div>
+                    </div>
+                  ) : userProfile ? (
+                    <div className="mt-2 space-y-1 text-sm text-gray-500">
+                      <p>{userProfile.name}</p>
+                      <p>{userProfile.phone}</p>
+                      <p>
+                        {userProfile.address?.street}, 
+                        {userProfile.address?.city}, 
+                        {userProfile.address?.state} {userProfile.address?.zipCode}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-sm text-gray-500">No address information available</p>
+                  )}
+                  <div className="flex flex-wrap gap-1">
+                    <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                      <div className="p-4">
+                        <div className="flex gap-3 items-start">
+                          <div className="p-2 rounded-lg bg-[#53D695]/10">
+                            <Truck weight="bold" size={20} className="text-[#53D695]" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-900">Free Delivery</h3>
+                            <p className="mt-1 text-sm text-[#53D695] font-medium">
+                              Estimated 8-10 business days
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <button 
@@ -188,15 +258,18 @@ export default function CartPage() {
               <span className="font-bold text-gray-900">${total.toFixed(2)}</span>
             </div>
           </div>
-          <Link 
-            href="/checkout"
-            className="w-full mt-6 px-6 py-3.5 bg-[#53D695] text-white font-medium rounded-full hover:bg-[#53D695]/90 transition-colors inline-block text-center"
+          <button 
+            onClick={handleCheckout}
+            className="w-full mt-6 px-6 py-3.5 bg-[#53D695] text-white font-medium rounded-full hover:bg-[#53D695]/90 transition-colors"
           >
             Proceed to Checkout
-          </Link>
-          <p className="mt-3 text-xs text-center text-gray-500">
-            Free shipping on all orders over $50
-          </p>
+          </button>
+          <div className="mt-3 text-center">
+            <p className="text-sm text-gray-500 mb-2">
+              Free delivery ends in:
+            </p>
+            <CountdownTimer />
+          </div>
         </div>
       </div>
     </div>

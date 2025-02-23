@@ -27,6 +27,9 @@ module.exports = {
         progress: "progress 1s ease-in-out",
         shimmer: "shimmer 1s linear infinite",
       },
+      screens: {
+        xs: "400px",
+      },
     },
   },
   plugins: [],

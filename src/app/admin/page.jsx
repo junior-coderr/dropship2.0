@@ -1,13 +1,42 @@
 'use client';
-// import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowUp, ArrowDown, Package, ShoppingCart, Users, CurrencyInr } from 'phosphor-react';
 import { motion } from 'framer-motion';
 
 export default function AdminDashboard() {
-  const stats = [
+  const [stats, setStats] = useState({
+    revenue: 0,
+    orders: 0,
+    products: 0,
+    customers: 0
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const res = await fetch('/api/admin/stats', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await res.json();
+        if (data.success) {
+          setStats(data.stats);
+        }
+      } catch (error) {
+        console.error('Failed to fetch stats:', error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  const statsData = [
     {
       title: "Total Revenue",
-      value: "₹12,345",
+      value: `₹${stats.revenue}`,
       change: "+12%",
       isPositive: true,
       icon: CurrencyInr,
@@ -16,7 +45,7 @@ export default function AdminDashboard() {
     },
     {
       title: "Total Orders",
-      value: "156",
+      value: stats.orders,
       change: "+8%",
       isPositive: true,
       icon: ShoppingCart,
@@ -25,7 +54,7 @@ export default function AdminDashboard() {
     },
     {
       title: "Total Products",
-      value: "89",
+      value: stats.products,
       change: "+24%",
       isPositive: true,
       icon: Package,
@@ -34,7 +63,7 @@ export default function AdminDashboard() {
     },
     {
       title: "Total Customers",
-      value: "2,345",
+      value: stats.customers,
       change: "-2%",
       isPositive: false,
       icon: Users,
@@ -44,9 +73,9 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
+        {statsData.map((stat, index) => (
           <motion.div
             key={stat.title}
             initial={{ opacity: 0, y: 20 }}
@@ -80,11 +109,29 @@ export default function AdminDashboard() {
 }
 
 function RecentOrders() {
-  const orders = [
-    { id: '#12345', customer: 'John Doe', status: 'Delivered', amount: '₹1,234', date: '2024-01-20' },
-    { id: '#12346', customer: 'Jane Smith', status: 'Processing', amount: '₹2,345', date: '2024-01-19' },
-    // Add more orders...
-  ];
+  const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const res = await fetch('/api/admin/orders/recent', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await res.json();
+        if (data.success) {
+          setOrders(data.orders);
+        }
+      } catch (error) {
+        console.error('Failed to fetch orders:', error);
+      }
+    };
+
+    fetchOrders();
+  }, []);
 
   return (
     <div className="bg-white rounded-xl shadow-sm">
@@ -125,11 +172,29 @@ function RecentOrders() {
 }
 
 function TopProducts() {
-  const products = [
-    { name: 'Product 1', sold: 234, revenue: '₹12,345', stock: 45 },
-    { name: 'Product 2', sold: 187, revenue: '₹9,876', stock: 32 },
-    // Add more products...
-  ];
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const res = await fetch('/api/admin/products/top', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await res.json();
+        if (data.success) {
+          setProducts(data.products);
+        }
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   return (
     <div className="bg-white rounded-xl shadow-sm">

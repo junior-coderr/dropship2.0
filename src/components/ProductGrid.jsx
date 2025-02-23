@@ -1,95 +1,90 @@
 'use client';
-import { useCart } from '@/context/CartContext';
+import { useProducts } from '@/hooks/useProducts';
+import { useImageValidation } from '@/hooks/useImageValidation';
 import Image from 'next/image';
-import { ShoppingCart } from 'phosphor-react';
+import { ArrowUpRight } from 'phosphor-react';
 import Link from 'next/link';
 
-const products = [
-  {
-    id: 1,
-    name: 'Wireless Headphones',
-    price: 99.99,
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e',
-    description: 'Premium wireless headphones with noise cancellation',
-    isNew: true,
-    rating: 4.5
-  },
-  {
-    id: 2,
-    name: 'Smart Watch',
-    price: 199.99,
-    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30',
-    description: 'Feature-rich smartwatch with health tracking',
-    isNew: false,
-    rating: 4.0
-  },
-  {
-    id: 3,
-    name: 'Digital Camera',
-    price: 499.99,
-    image: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f',
-    description: 'Professional grade digital camera',
-    isNew: false,
-    rating: 4.8
-  },
-  {
-    id: 4,
-    name: 'Laptop',
-    price: 899.99,
-    image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853',
-    description: 'High-performance laptop for professionals',
-    isNew: true,
-    rating: 4.7
-  },
-  {
-    id: 5,
-    name: 'Smartphone',
-    price: 699.99,
-    image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9',
-    description: 'Latest generation smartphone',
-    isNew: false,
-    rating: 4.3
-  },
-  {
-    id: 6,
-    name: 'Wireless Earbuds',
-    price: 149.99,
-    image: 'https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb',
-    description: 'Premium wireless earbuds with charging case',
-    isNew: true,
-    rating: 4.6
+const DEFAULT_PLACEHOLDER = '/placeholder.png';
+
+const ProductImage = ({ product }) => {
+  console.log('Product:', product);
+  const imageUrl = product.images[0]?.url || null;
+  console.log('Product image URL:', imageUrl);
+  const validatedSrc = useImageValidation(imageUrl, DEFAULT_PLACEHOLDER);
+
+  if (!validatedSrc) {
+    return null;
   }
-];
+
+  return (
+    <Image 
+      src={validatedSrc}
+      alt={product?.name || 'Product image'}
+      fill
+      className="object-cover group-hover:scale-105 transition-transform duration-500"
+      priority={false}
+      unoptimized={validatedSrc === DEFAULT_PLACEHOLDER}
+    />
+  );
+};
 
 export default function ProductGrid() {
-  const { addToCart } = useCart();
+  const { products, loading, error } = useProducts();
   const formatPrice = (price) => `$${price.toFixed(2)}`;
+  const calculateOriginalPrice = (price) => price * 1.3; // 20% higher price
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+        {[...Array(6)].map((_, index) => (
+          <div key={index} className="animate-pulse">
+            <div className="bg-gray-200 h-72 rounded-[2rem]"></div>
+            <div className="p-6">
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center text-red-500 py-10">
+        Error loading products: {error}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
       {products.map((product) => (
-        <Link href={`/product/${product.id}`}
-          key={product.id} 
+        <Link href={`/product/${product._id}`}
+          key={product._id} 
           className="group bg-white/70 backdrop-blur-sm rounded-[2rem] 
             shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]
-            transition-all duration-300 relative overflow-hidden border border-gray-100
-            hover:border-gray-200"
+            transition-all duration-300 relative overflow-hidden border border-gray-200
+            hover:border-gray-300"
         >
           {/* Image Container */}
           <div className="relative h-72 overflow-hidden rounded-t-[2rem] bg-gray-50">
-            <Image 
-              src={product.image}
-              alt={product.name}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-            {product.isNew && (
-              <span className="absolute top-4 left-4 bg-[#38D49A]/90 backdrop-blur-md 
+            <ProductImage product={product} />
+            <div className="absolute top-4 left-4 flex gap-2">
+              {product.isNew && (
+                <span className="bg-[#38D49A]/90 backdrop-blur-md 
+                  text-white px-3 py-1 rounded-full text-xs font-semibold
+                  shadow-[0_2px_10px_rgb(56,212,154,0.3)]">
+                  Bestseller
+                </span>
+              )}
+              <span className="bg-red-500/90 backdrop-blur-md 
                 text-white px-3 py-1 rounded-full text-xs font-semibold
-                shadow-[0_2px_10px_rgb(56,212,154,0.3)]">
-                Bestseller
+                shadow-[0_2px_10px_rgb(239,68,68,0.3)]">
+                30% OFF
               </span>
-            )}
+            </div>
           </div>
 
           {/* Content */}
@@ -104,21 +99,17 @@ export default function ProductGrid() {
             </div>
 
             <div className="flex items-center justify-between">
-              <p className="text-xl font-extrabold text-gray-900 drop-shadow-sm">
-                {formatPrice(product.price)}
-              </p>
-
-              <button
-                onClick={() => addToCart(product)}
-                className="flex items-center gap-2 bg-[#38D49A] text-white px-5 py-2.5 rounded-full
-                  text-sm font-semibold transition-all duration-300
-                  shadow-[0_4px_10px_rgb(56,212,154,0.2)]
-                  hover:shadow-[0_6px_20px_rgb(56,212,154,0.35)]
-                  hover:translate-y-[-2px]"
-              >
-                <ShoppingCart size={18} weight="bold" />
-                <span>Add</span>
-              </button>
+              <div className="flex flex-col">
+                <p className="text-xl font-extrabold text-gray-900 drop-shadow-sm">
+                  {formatPrice(product.price)}
+                </p>
+                <p className="text-sm text-gray-500 line-through">
+                  {formatPrice(calculateOriginalPrice(product.price))}
+                </p>
+              </div>
+              <div className="p-2 bg-black/90 backdrop-blur-sm rounded-full text-[#fff]">
+                <ArrowUpRight size={20} weight="bold" />
+              </div>
             </div>
           </div>
         </Link>
