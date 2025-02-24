@@ -5,7 +5,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 export function generateToken(user) {
   return jwt.sign(
     {
-      id: user._id,
+      id: user._id, // Changed id to userId for consistency
       phone: user.phone,
       name: user.name,
       role: user.role,
@@ -17,8 +17,10 @@ export function generateToken(user) {
 
 export function verifyToken(token) {
   try {
-    return jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
+    return decoded;
   } catch (error) {
+    console.error("Token verification failed:", error.message);
     return null;
   }
 }

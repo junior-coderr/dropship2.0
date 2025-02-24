@@ -31,4 +31,25 @@ const cartSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+cartSchema.methods.getDisplayPrices = function () {
+  const subtotal = this.items.reduce(
+    (acc, item) => acc + item.price * item.quantity,
+    0
+  );
+  const discount = subtotal * 0.3; // 30% discount
+  const shippingOriginal = 40;
+  const shippingDiscount = 40; // $40 off shipping
+  const total = subtotal; // Actual total remains unchanged
+
+  return {
+    subtotal,
+    discount,
+    shippingOriginal,
+    shippingDiscount,
+    total,
+    displayTotal: subtotal + shippingOriginal,
+    currency: "₹",
+  };
+};
+
 export default mongoose.models.Cart || mongoose.model("Cart", cartSchema);

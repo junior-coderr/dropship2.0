@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/mongodb";
 import Product from "@/models/Product";
+import { isAdmin } from "@/lib/auth";
+import mongoose from "mongoose";
 import { verifyToken } from "@/lib/jwt";
-import { deleteFromAzure } from "@/lib/azure";
 
 // Helper function to verify admin role
 const verifyAdmin = async (request) => {
@@ -21,21 +22,31 @@ const verifyAdmin = async (request) => {
   return true;
 };
 
-export async function PUT(request, { params }) {
+export async function PUT(request, context) {
   try {
-    const isAdmin = await verifyAdmin(request);
-    if (!isAdmin) {
+    const adminUser = await isAdmin(request);
+    if (!adminUser) {
       return NextResponse.json(
-        { success: false, message: "Unauthorized" },
+        { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    await connectDB();
-    const id = params.id;
-    const data = await request.json();
+    const { id } = context.params;
 
-    const product = await Product.findByIdAndUpdate(id, data, { new: true });
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid product ID" },
+        { status: 400 }
+      );
+    }
+
+    await connectDB();
+
+    const product = await Product.findByIdAndUpdate(id, await request.json(), {
+      new: true,
+    });
+
     if (!product) {
       return NextResponse.json(
         { success: false, message: "Product not found" },
@@ -43,11 +54,15 @@ export async function PUT(request, { params }) {
       );
     }
 
-    return NextResponse.json({ success: true, product });
+    return NextResponse.json({
+      success: true,
+      product,
+    });
   } catch (error) {
+    console.error("Error updating product:", error);
     return NextResponse.json(
-      { success: false, message: error.message },
-      { status: 400 }
+      { success: false, message: "Failed to update product" },
+      { status: 500 }
     );
   }
 }

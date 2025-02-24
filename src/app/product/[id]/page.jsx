@@ -30,7 +30,14 @@ export default function ProductDetail() {
 
   const minSwipeDistance = 50;
 
-  const formatPrice = (price) => `$${price?.toFixed(2)}`;
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0
+    }).format(price);
+  };
+
   const calculateOriginalPrice = (price) => price * 1.3;
 
   const onTouchStart = (e) => {

@@ -20,13 +20,14 @@ export async function GET(request) {
     await connectDB();
 
     // Find user and check for address
-    const user = await User.findById(decoded.id).select("shippingAddress");
+    const user = await User.findById(decoded.id).select("address");
 
     const hasAddress = Boolean(
-      user?.shippingAddress?.address1 &&
-        user?.shippingAddress?.city &&
-        user?.shippingAddress?.state &&
-        user?.shippingAddress?.zipCode
+      user?.address?.houseNumber &&
+        user?.address?.roadName &&
+        user?.address?.city &&
+        user?.address?.state &&
+        user?.address?.zipCode
     );
     console.log("hasAddress", hasAddress);
 

@@ -29,21 +29,26 @@ export function CartProvider({ children }) {
       });
       const data = await response.json();
       
-      if (data.success) {
+      if (data.success && data.cart && Array.isArray(data.cart.items)) {
         console.log('Cart items:', data.cart.items);
-        setCart(data.cart.items.map(item => ({
-          id: item.productId._id,
-          name: item.productId.name,
-          price: item.price,
-          quantity: item.quantity,
-          size: item.size,
-          color: item.color,
-          images: item.productId.images
-        })));
+        setCart(data.cart.items
+          .filter(item => item && item.productId) // Filter out null items
+          .map(item => ({
+            id: item.productId?._id || '',
+            name: item.productId?.name || 'Product Unavailable',
+            price: item.price || 0,
+            quantity: item.quantity || 1,
+            size: item.size || null,
+            color: item.color || null,
+            images: item.productId?.images || []
+          })));
+      } else {
+        setCart([]);
       }
     } catch (error) {
       console.error('Error fetching cart:', error);
       toast.error('Failed to fetch cart items');
+      setCart([]);
     }
   };
 

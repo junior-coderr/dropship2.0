@@ -76,7 +76,7 @@ export default function Hero() {
                       </span>
                     </h2>
                     <p className="text-xl sm:text-2xl text-white/90 font-medium drop-shadow-lg">
-                      New Arrivals Every Week • <span className="text-brand-green font-bold">Free Shipping</span>
+                      Trending Products Daily • <span className="text-brand-green font-bold">Free Shipping</span>
                     </p>
                   </div>
 

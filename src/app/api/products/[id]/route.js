@@ -3,10 +3,9 @@ import { connectDB } from "@/lib/db/mongodb";
 import Product from "@/models/Product";
 import mongoose from "mongoose";
 
-export async function GET(request, { params }) {
+export async function GET(request, context) {
   try {
-    const { id } = await params;
-    // console.log("id", id);
+    const { id } = await context.params;
 
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(

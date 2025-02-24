@@ -28,7 +28,11 @@ const userSchema = new mongoose.Schema(
       default: Date.now,
     },
     address: {
-      street: {
+      houseNumber: {
+        type: String,
+        trim: true,
+      },
+      roadName: {
         type: String,
         trim: true,
       },

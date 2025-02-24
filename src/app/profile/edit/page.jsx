@@ -12,7 +12,8 @@ export default function EditProfilePage() {
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
-    address: '',
+    houseNumber: '',
+    roadName: '',
     city: '',
     state: '',
     zipCode: '',
@@ -35,7 +36,8 @@ export default function EditProfilePage() {
         setFormData({
           fullName: data.user.name || '',
           phone: data.user.phone || '',
-          address: data.user.address?.street || '',
+          houseNumber: data.user.address?.houseNumber || '',
+          roadName: data.user.address?.roadName || '',
           city: data.user.address?.city || '',
           state: data.user.address?.state || '',
           zipCode: data.user.address?.zipCode || '',
@@ -70,7 +72,8 @@ export default function EditProfilePage() {
           name: formData.fullName,
           phone: formData.phone,
           address: {
-            street: formData.address,
+            houseNumber: formData.houseNumber,
+            roadName: formData.roadName,
             city: formData.city,
             state: formData.state,
             zipCode: formData.zipCode
@@ -156,14 +159,29 @@ export default function EditProfilePage() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Delivery Address</h2>
           <div className="space-y-4">
             <div>
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                Street Address
+              <label htmlFor="houseNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                House No./Building Name
               </label>
               <input
                 type="text"
-                id="address"
-                name="address"
-                value={formData.address}
+                id="houseNumber"
+                name="houseNumber"
+                value={formData.houseNumber}
+                onChange={handleChange}
+                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#53D695]/20 focus:border-[#53D695] transition-colors"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="roadName" className="block text-sm font-medium text-gray-700 mb-1">
+                Road Name/Area
+              </label>
+              <input
+                type="text"
+                id="roadName"
+                name="roadName"
+                value={formData.roadName}
                 onChange={handleChange}
                 className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#53D695]/20 focus:border-[#53D695] transition-colors"
                 required

@@ -1,154 +1,116 @@
 'use client';
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
- import { Package, CaretLeft, PencilSimple } from 'phosphor-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { CaretLeft, ShoppingBag } from 'phosphor-react';
 
 export default function OrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState([]);
-  
-  // Mock orders data
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    setOrders([
-      {
-        id: '1',
-        date: '2024-01-15',
-        status: 'Delivered',
-        total: 199.99,
-        items: [
-          {
-            id: 1,
-            name: 'Cotton T-Shirt',
-            image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800',
-            price: 99.99,
-          },
-          {
-            id: 2,
-            name: 'Denim Jeans',
-            image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=800',
-            price: 100.00,
-          },
-        ],
-      },
-      // Add more mock orders as needed
-    ]);
+    const fetchOrders = async () => {
+      try {
+        const response = await fetch('/api/orders', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          }
+        });
+        const data = await response.json();
+        if (data.success) {
+          setOrders(data.orders);
+        }
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
   }, []);
 
-  if (orders.length === 0) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
-        <div className="h-40 w-40 rounded-full bg-gray-50 flex items-center justify-center">
-          <Package size={48} className="text-gray-400" />
-        </div>
-        <h2 className="text-2xl font-bold text-gray-900">No orders yet</h2>
-        <p className="text-gray-500">When you place orders, they will appear here.</p>
-      </div>
-    );
-  }
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'confirmed': return 'bg-blue-100 text-blue-800';
+      case 'shipped': return 'bg-purple-100 text-purple-800';
+      case 'delivered': return 'bg-green-100 text-green-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Header with back button, title, and edit button */}
-      <div className="flex items-center justify-between mb-8">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+      <div className="flex items-center gap-4 mb-8">
         <button 
           onClick={() => router.back()}
           className="p-2.5 rounded-full bg-gray-50 hover:bg-gray-100 transition-colors"
         >
-          <CaretLeft size={20} className="text-gray-700" />
+          <CaretLeft weight="bold" size={20} className="text-gray-700" />
         </button>
-        <h1 className="text-xl font-bold text-gray-900">Your Orders</h1>
-        <button 
-          onClick={() => router.push('/profile/edit')}
-          className="p-2.5 rounded-full bg-gray-50 hover:bg-gray-100 transition-colors group"
-          title="Edit delivery details"
-        >
-          <PencilSimple 
-            size={20} 
-            className="text-gray-700 group-hover:text-[#53D695] transition-colors" 
-          />
-        </button>
+        <h1 className="text-xl font-bold text-gray-900">My Orders</h1>
       </div>
-      
-      {/* Add delivery info section */}
-      <div className="mb-6 p-4 bg-white rounded-xl border border-gray-100">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="font-medium text-gray-900">Delivery Details</h3>
-            <div className="mt-2 space-y-1 text-sm text-gray-500">
-              <p>John Doe</p>
-              <p>+1 234 567 8900</p>
-              <p>123 Street Name, City, State, 12345</p>
+
+      {loading ? (
+        <div className="space-y-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="animate-pulse bg-white rounded-xl p-4">
+              <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
             </div>
-          </div>
-          <button 
-            onClick={() => router.push('/profile/edit')}
-            className="text-[#53D695] text-sm font-medium hover:underline"
-          >
-            Edit
-          </button>
+          ))}
         </div>
-      </div>
-
-      <div className="space-y-6">
-        {orders.map((order) => (
-          <div 
-            key={order.id}
-            className="bg-white rounded-xl border border-gray-100 overflow-hidden"
-          >
-            {/* Order header */}
-            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-900">Order #{order.id}</p>
-                <p className="text-sm text-gray-500">
-                  {new Date(order.date).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </p>
-              </div>
-              <span className="px-3 py-1 bg-green-50 text-green-600 text-sm font-medium rounded-full">
-                {order.status}
-              </span>
-            </div>
-
-            {/* Order items */}
-            <div className="divide-y divide-gray-100">
-              {order.items.map((item) => (
-                <div key={item.id} className="p-4 flex gap-4">
-                  <div className="relative h-24 w-24 flex-shrink-0">
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      fill
-                      className="object-cover rounded-lg"
-                    />
+      ) : orders.length > 0 ? (
+        <div className="space-y-4">
+          {orders.map((order) => (
+            <Link 
+              key={order._id}
+              href={`/orders/${order._id}`}
+              className="block bg-white rounded-xl border border-gray-100 overflow-hidden hover:border-gray-200 transition-colors"
+            >
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="font-medium text-gray-900">
+                      Order #{order._id.slice(-6)}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </p>
                   </div>
-                  <div className="flex-1 flex justify-between">
-                    <div className="space-y-1">
-                      <h3 className="font-medium text-gray-900">{item.name}</h3>
-                      <p className="text-sm text-gray-500">Quantity: 1</p>
-                      <p className="text-sm text-gray-500">Size: M</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium text-gray-900">${item.price}</p>
-                    </div>
-                  </div>
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
+                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                  </span>
                 </div>
-              ))}
-            </div>
-
-            {/* Order total */}
-            <div className="p-4 bg-gray-50 border-t border-gray-100">
-              <div className="flex justify-between items-center">
-                <span className="font-medium text-gray-900">Order Total</span>
-                <span className="font-bold text-gray-900">${order.total}</span>
+                <div className="flex justify-between items-end">
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <ShoppingBag size={16} />
+                    <span>{order.items.length} items</span>
+                  </div>
+                  <span className="font-medium text-gray-900">
+                    ${order.totalAmount.toFixed(2)}
+                  </span>
+                </div>
               </div>
-            </div>
-          </div>
-        ))}
-      </div>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <ShoppingBag size={48} className="mx-auto text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
+          <p className="text-gray-500 mb-6">Start shopping to create your first order</p>
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[#53D695] hover:bg-[#53D695]/90"
+          >
+            Browse Products
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

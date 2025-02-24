@@ -17,16 +17,16 @@ export default function AdminLayout({ children }) {
         </div>
 
         {/* Mobile Header with Hamburger */}
-        <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b z-50 px-4">
+        <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b z-50 px-3">
           <div className="flex items-center justify-between h-full">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="p-2 hover:bg-gray-100 rounded-lg"
+              className="p-1.5 hover:bg-gray-100 rounded-lg"
             >
-              <List size={24} />
+              <List size={22} />
             </button>
-            <span className="font-semibold text-gray-800">Admin Panel</span>
-            <div className="w-10" /> {/* Spacer for center alignment */}
+            <span className="font-medium text-gray-800">Admin Panel</span>
+            <div className="w-8" /> {/* Spacer for center alignment */}
           </div>
         </div>
 
@@ -49,7 +49,7 @@ export default function AdminLayout({ children }) {
                 className="fixed top-0 left-0 bottom-0 w-64 bg-white z-50 md:hidden"
               >
                 <div className="p-4 border-b flex justify-between items-center">
-                  <span className="font-semibold text-gray-800">Admin Panel</span>
+                  {/* <span className="font-semibold text-gray-800">Admin Panel</span> */}
                   <button
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="p-2 hover:bg-gray-100 rounded-lg"
@@ -64,7 +64,7 @@ export default function AdminLayout({ children }) {
         </AnimatePresence>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-8 md:p-8 pt-20 md:pt-8">
+        <main className="flex-1 overflow-y-auto bg-gray-50 p-3 sm:p-4 md:p-6 pt-16 md:pt-6">
           {children}
         </main>
       </div>

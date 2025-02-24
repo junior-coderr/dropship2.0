@@ -44,6 +44,17 @@
   }
 }
 
+@keyframes scale-up-center {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 /* Remove or comment out the animate-float class */
 /* .animate-float {
   animation: float 3s ease-in-out infinite;
@@ -55,6 +66,10 @@
 
 .animate-in {
   animation: animate-in 0.2s ease-out;
+}
+
+.scale-up-center {
+  animation: scale-up-center 0.3s cubic-bezier(0.39, 0.575, 0.565, 1) both;
 }
 
 body {
