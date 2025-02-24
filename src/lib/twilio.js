@@ -7,7 +7,6 @@ const client = twilio(accountSid, authToken);
 const generateOTP = () => {
   return Math.floor(1000 + Math.random() * 9000).toString();
 };
-
 const sendOTP = async (phone, otp) => {
   try {
     const message = await client.messages.create({
