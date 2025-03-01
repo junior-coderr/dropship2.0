@@ -1,8 +1,8 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
+// import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { CaretLeft, ShoppingBag, Truck, ArrowsClockwise, X, Lightning } from 'phosphor-react';
+// import { CaretLeft, ShoppingBag, Truck, ArrowsClockwise, X, Lightning } from 'phosphor-react';
 import { useCart } from '@/context/CartContext';
 import { useProduct } from '@/hooks/useProduct';
 // import { useImageValidation } from '@/hooks/useImageValidation';

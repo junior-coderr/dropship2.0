@@ -1,10 +1,10 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CaretLeft } from 'phosphor-react';
 import { toast } from 'react-hot-toast';
 
-export default function EditProfilePage() {
+function EditProfilePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect');
@@ -245,5 +245,15 @@ export default function EditProfilePage() {
         </button>
       </form>
     </div>
+  );
+}
+
+export default function EditProfilePage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen">
+      <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#53D695] border-t-transparent"></div>
+    </div>}>
+      <EditProfilePageContent />
+    </Suspense>
   );
 }

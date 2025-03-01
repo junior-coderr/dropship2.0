@@ -259,6 +259,9 @@ export default function AdminOrderDetail({ params }) {
                     <p className="text-gray-600">
                       <span className="font-medium">Phone:</span> {userData.phone || 'N/A'}
                     </p>
+                    <p className="text-gray-600">
+                      <span className="font-medium">Email:</span> {userData.email || 'N/A'}
+                    </p>
                   </div>
                 )}
                 <p className="text-gray-600">
@@ -271,7 +274,7 @@ export default function AdminOrderDetail({ params }) {
               </div>
               <button
                 onClick={() => {
-                  if (!userData) {
+                  if (!userData && !loadingUserData) {
                     fetchUserDetails();
                   }
                   setShowMoreUserInfo(!showMoreUserInfo);
