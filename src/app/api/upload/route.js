@@ -19,15 +19,38 @@ export async function POST(request) {
 
     const formData = await request.formData();
     const file = formData.get("file");
+    const fileType = formData.get("fileType") || "image"; // New parameter to specify file type
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // Validate file type
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-    if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
+    // Validate file type based on the fileType parameter
+    const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
+    const allowedVideoTypes = ["video/mp4", "video/webm", "video/quicktime"];
+    
+    if (fileType === "image" && !allowedImageTypes.includes(file.type)) {
+      return NextResponse.json({ error: "Invalid image file type" }, { status: 400 });
+    }
+    
+    if (fileType === "video" && !allowedVideoTypes.includes(file.type)) {
+      return NextResponse.json({ error: "Invalid video file type" }, { status: 400 });
+    }
+
+    // Check file size - 5MB for images, 50MB for videos
+    const maxSizeImage = 5 * 1024 * 1024; // 5MB in bytes
+    const maxSizeVideo = 50 * 1024 * 1024; // 50MB in bytes
+    
+    if (fileType === "image" && file.size > maxSizeImage) {
+      return NextResponse.json({ 
+        error: "Image file size exceeds the 5MB limit" 
+      }, { status: 400 });
+    }
+    
+    if (fileType === "video" && file.size > maxSizeVideo) {
+      return NextResponse.json({ 
+        error: "Video file size exceeds the 50MB limit" 
+      }, { status: 400 });
     }
 
     // Generate unique filename
@@ -44,6 +67,7 @@ export async function POST(request) {
       url: result.url,
       alt: file.name,
       filename,
+      type: fileType // Include the type in the response
     });
   } catch (error) {
     console.error("Upload error:", error);

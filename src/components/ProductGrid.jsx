@@ -4,13 +4,21 @@ import { useImageValidation } from '@/hooks/useImageValidation';
 import Image from 'next/image';
 import { ArrowUpRight } from 'phosphor-react';
 import Link from 'next/link';
+import { useMemo, useEffect } from 'react';
 
 const DEFAULT_PLACEHOLDER = '/placeholder.png';
 
+// Fisher-Yates shuffle algorithm
+const shuffleArray = (array) => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+};
+
 const ProductImage = ({ product }) => {
-  console.log('Product:', product);
   const imageUrl = product.images[0]?.url || null;
-  console.log('Product image URL:', imageUrl);
   const validatedSrc = useImageValidation(imageUrl, DEFAULT_PLACEHOLDER);
 
   if (!validatedSrc) {
@@ -31,6 +39,53 @@ const ProductImage = ({ product }) => {
 
 export default function ProductGrid() {
   const { products, loading, error } = useProducts();
+  
+  // Memoize the shuffled products array with localStorage persistence
+  const shuffledProducts = useMemo(() => {
+    if (typeof window === 'undefined' || !products) return [];
+    
+    // Try to get existing order from localStorage
+    const storedOrder = localStorage.getItem('productsOrder');
+    if (storedOrder) {
+      try {
+        const orderMap = JSON.parse(storedOrder);
+        // Check if stored order is still valid for current products
+        const isValidOrder = products.every(p => p._id in orderMap);
+        if (isValidOrder) {
+          return [...products].sort((a, b) => orderMap[a._id] - orderMap[b._id]);
+        }
+      } catch (e) {
+        console.error('Error parsing stored products order:', e);
+      }
+    }
+    
+    // If no valid stored order, create new shuffle
+    const shuffled = shuffleArray([...products]);
+    // Store new order
+    const newOrder = Object.fromEntries(
+      shuffled.map((p, index) => [p._id, index])
+    );
+    localStorage.setItem('productsOrder', JSON.stringify(newOrder));
+    return shuffled;
+  }, [products]);
+
+  // Restore scroll position when navigating back
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const scrollPosition = sessionStorage.getItem('scrollPosition');
+      if (scrollPosition) {
+        window.scrollTo(0, parseInt(scrollPosition));
+        sessionStorage.removeItem('scrollPosition');
+      }
+    }
+  }, []);
+
+  const handleProductClick = () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('scrollPosition', window.scrollY.toString());
+    }
+  };
+
   const formatPrice = (price) => {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -38,7 +93,8 @@ export default function ProductGrid() {
       maximumFractionDigits: 0
     }).format(price);
   };
-  const calculateOriginalPrice = (price) => price * 1.3; // 20% higher price
+
+  const calculateOriginalPrice = (price) => price * 1.3;
 
   if (loading) {
     return (
@@ -66,9 +122,11 @@ export default function ProductGrid() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-      {products.map((product) => (
-        <Link href={`/product/${product._id}`}
+      {shuffledProducts.map((product) => (
+        <Link 
+          href={`/product/${product._id}`}
           key={product._id} 
+          onClick={handleProductClick}
           className="group bg-white/70 backdrop-blur-sm rounded-[2rem] 
             shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]
             transition-all duration-300 relative overflow-hidden border border-gray-200
@@ -96,10 +154,10 @@ export default function ProductGrid() {
           {/* Content */}
           <div className="p-6 relative backdrop-blur-sm">
             <div className="mb-4">
-              <h3 className="text-lg font-bold text-gray-900 mb-2 drop-shadow-sm">
+              <h3 className="text-lg font-bold text-gray-900 mb-2 drop-shadow-sm line-clamp-2 min-h-[3.5rem]">
                 {product.name}
               </h3>
-              <p className="text-sm text-gray-500 line-clamp-2 font-medium">
+              <p className="text-sm text-gray-500 line-clamp-1 font-medium">
                 {product.description}
               </p>
             </div>

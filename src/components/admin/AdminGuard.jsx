@@ -5,24 +5,24 @@ import { useAuth } from '@/context/AuthContext';
 import { LoadingState } from './LoadingState';
 
 export function AdminGuard({ children }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    if (user === null) {
-      // Still loading
+    if (loading) {
       return;
     }
-    
-    if (!user || user.role !== 'admin') {
+
+    const token = localStorage.getItem('auth_token');
+    if (!token || !user || user.role !== 'admin') {
       router.push('/');
     } else {
       setIsChecking(false);
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
-  if (isChecking) {
+  if (loading || isChecking) {
     return <LoadingState />;
   }
 

@@ -136,8 +136,10 @@ export default function CartPage() {
                     className="relative h-24 w-24 sm:h-32 sm:w-32 flex-shrink-0 rounded-xl overflow-hidden group"
                   >
                     <Image
-                      src={item.images[0].url}
-                      alt={item.name}
+                      src={item.images && item.images.length > 0 && item.images[0].url 
+                        ? item.images[0].url 
+                        : '/placeholder-product.png'}
+                      alt={item.name || 'Product image'}
                       fill
                       className="object-cover transition-transform duration-300 group-hover:scale-110"
                     />

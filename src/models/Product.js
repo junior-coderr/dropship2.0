@@ -21,6 +21,11 @@ const productSchema = new mongoose.Schema(
         alt: String,
       },
     ],
+    video: {
+      url: String,
+      alt: String,
+      filename: String,
+    },
     sizeType: {
       type: String,
       enum: ["free", "custom"],
@@ -50,6 +55,10 @@ const productSchema = new mongoose.Schema(
       type: String,
       enum: ["draft", "published"],
       default: "draft",
+    },
+    inStock: {
+      type: Boolean,
+      default: true,
     },
     category: {
       type: String,

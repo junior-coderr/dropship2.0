@@ -3,10 +3,10 @@ import jwt from "jsonwebtoken";
 import User from "@/models/User";
 import { connectDB } from "@/lib/db/mongodb";
 
-export async function isAdmin(request = null) {
+export async function verifyAuth(request = null) {
   try {
     await connectDB();
-
+    
     // Try to get token from Authorization header if request is provided
     let token;
     if (request) {
@@ -23,20 +23,33 @@ export async function isAdmin(request = null) {
     }
 
     if (!token) {
-      return false;
+      return { user: null, error: "No token found" };
     }
 
-    // Use decoded.userId instead of decoded.id
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id); // Changed from decoded.id to decoded.userId
+    const user = await User.findById(decoded.id);
 
-    if (!user || user.role !== "admin") {
-      return false;
+    if (!user) {
+      return { user: null, error: "User not found" };
     }
 
-    return user;
+    return { user, error: null };
   } catch (error) {
     console.error("Auth error:", error);
-    return false;
+    return { user: null, error: error.message };
   }
+}
+
+export async function isAdmin(request = null) {
+  const { user, error } = await verifyAuth(request);
+  
+  if (error || !user) {
+    return { user: null, error: error || "Authentication failed" };
+  }
+
+  if (user.role !== "admin") {
+    return { user: null, error: "User is not an admin" };
+  }
+
+  return { user, error: null };
 }

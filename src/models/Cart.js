@@ -38,7 +38,7 @@ cartSchema.methods.getDisplayPrices = function () {
   );
   const discount = subtotal * 0.3; // 30% discount
   const shippingOriginal = 40;
-  const shippingDiscount = 40; // $40 off shipping
+  const shippingDiscount = 40; // ₹40 off shipping
   const total = subtotal; // Actual total remains unchanged
 
   return {

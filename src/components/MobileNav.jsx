@@ -3,14 +3,16 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { House, Package, ShoppingBag } from 'phosphor-react';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 
 export default function MobileNav() {
   const pathname = usePathname();
   const { cart } = useCart();
-
+  const { user } = useAuth();
+  
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 sm:hidden">
-      <div className="flex items-center gap-10 px-8 py-4 bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-gray-100/50">
+      <div className="flex items-center gap-6 px-6 py-4 bg-white/95 backdrop-blur-md rounded-full shadow-lg border border-gray-100/50">
         <Link 
           href="/cart" 
           className={`relative transition-all duration-300 ease-in-out active:scale-90 p-2.5 rounded-full ${
@@ -20,7 +22,7 @@ export default function MobileNav() {
           }`}
         >
           <ShoppingBag 
-            size={28} 
+            size={24} 
             weight={pathname === '/cart' ? 'fill' : 'regular'} 
             className="transition-all duration-300 ease-in-out"
           />
@@ -30,7 +32,7 @@ export default function MobileNav() {
             </span>
           )}
         </Link>
-
+        
         <Link 
           href="/" 
           className={`relative transition-all duration-300 ease-in-out active:scale-90 p-2.5 rounded-full ${
@@ -40,23 +42,23 @@ export default function MobileNav() {
           }`}
         >
           <House 
-            size={28} 
+            size={24} 
             weight={pathname === '/' ? 'fill' : 'regular'}
             className="transition-all duration-300 ease-in-out"
           />
         </Link>
-
+        
         <Link 
           href="/orders" 
           className={`relative transition-all duration-300 ease-in-out active:scale-90 p-2.5 rounded-full ${
-            pathname === '/orders' 
+            pathname === '/orders' || pathname.startsWith('/orders/') 
               ? 'text-[#53D695] bg-[#53D695]/10' 
               : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
           }`}
         >
           <Package 
-            size={28} 
-            weight={pathname === '/orders' ? 'fill' : 'regular'}
+            size={24} 
+            weight={pathname === '/orders' || pathname.startsWith('/orders/') ? 'fill' : 'regular'}
             className="transition-all duration-300 ease-in-out"
           />
         </Link>

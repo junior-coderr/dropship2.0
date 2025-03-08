@@ -1,5 +1,35 @@
 import mongoose from "mongoose";
 
+const returnRequestSchema = new mongoose.Schema({
+  itemId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true
+  },
+  reason: {
+    type: String,
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ["pending", "approved", "rejected", "refunded"],
+    default: "pending"
+  },
+  requestedAt: {
+    type: Date,
+    default: Date.now
+  },
+  upiId: {
+    type: String,
+    required: true
+  },
+  refundAmount: {
+    type: Number
+  },
+  refundedAt: {
+    type: Date
+  }
+});
+
 const orderItemSchema = new mongoose.Schema({
   productId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -17,6 +47,7 @@ const orderItemSchema = new mongoose.Schema({
   },
   size: String,
   color: String,
+  returnRequest: returnRequestSchema
 });
 
 const orderSchema = new mongoose.Schema(
@@ -48,6 +79,9 @@ const orderSchema = new mongoose.Schema(
       state: String,
       zipCode: String,
     },
+    deliveredAt: {
+      type: Date
+    }
   },
   {
     timestamps: true,
@@ -61,6 +95,12 @@ orderSchema.pre("save", function (next) {
       return total + item.price * item.quantity;
     }, 0);
   }
+  
+  // If status is being updated to "delivered", set deliveredAt
+  if (this.isModified("status") && this.status === "delivered" && !this.deliveredAt) {
+    this.deliveredAt = new Date();
+  }
+  
   next();
 });
 
@@ -69,6 +109,19 @@ orderSchema.methods.calculateTotal = function () {
   return this.items.reduce((total, item) => {
     return total + item.price * item.quantity;
   }, 0);
+};
+
+// Check if an item is eligible for return (7 days from delivery)
+orderSchema.methods.isEligibleForReturn = function(itemId) {
+  if (!this.deliveredAt || this.status !== "delivered") {
+    return false;
+  }
+  
+  const deliveredDate = new Date(this.deliveredAt);
+  const currentDate = new Date();
+  const daysSinceDelivery = Math.floor((currentDate - deliveredDate) / (1000 * 60 * 60 * 24));
+  
+  return daysSinceDelivery <= 7;
 };
 
 export default mongoose.models.Order || mongoose.model("Order", orderSchema);

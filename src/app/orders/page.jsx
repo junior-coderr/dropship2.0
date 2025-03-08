@@ -91,7 +91,7 @@ export default function OrdersPage() {
                     <span>{order.items.length} items</span>
                   </div>
                   <span className="font-medium text-gray-900">
-                    ${order.totalAmount.toFixed(2)}
+                  ₹{order.totalAmount.toFixed(2)}
                   </span>
                 </div>
               </div>

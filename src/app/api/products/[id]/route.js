@@ -21,6 +21,7 @@ export async function GET(request, context) {
       status: "published",
     });
 
+    // console.log("Product:", product);
     if (!product) {
       return NextResponse.json(
         { success: false, message: "Product not found" },

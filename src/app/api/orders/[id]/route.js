@@ -2,40 +2,24 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/mongodb";
 import Order from "@/models/Order";
 import mongoose from "mongoose";
-import { verifyToken } from "@/lib/jwt"; // Add this import
+import { verifyAuth } from "@/lib/auth";
 
-const verifyAuth = (request) => {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null;
-  }
-  const token = authHeader.split(" ")[1];
-  return verifyToken(token);
-};
-
-export async function GET(request, context) {
+export async function GET(request, { params }) {
   try {
-    const { id } = await context.params;
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json(
-        { success: false, message: "Invalid order ID" },
-        { status: 400 }
-      );
+    const { user, error } = await verifyAuth(request);
+    if (!user) {
+      return NextResponse.json({ error: error || 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     await connectDB();
-
-    const order = await Order.findById(id).populate(
-      "items.productId",
-      "name images price"
-    );
+    const order = await Order.findOne({
+      _id: id,
+      userId: user.id,
+    }).populate("items.productId");
 
     if (!order) {
-      return NextResponse.json(
-        { success: false, message: "Order not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -43,23 +27,19 @@ export async function GET(request, context) {
       order,
     });
   } catch (error) {
-    console.error("Error fetching order:", error);
-    return NextResponse.json(
-      { success: false, message: "Failed to fetch order" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 export async function PATCH(request, { params }) {
   try {
-    var params = await params;
-    const user = verifyAuth(request);
+    const { user, error } = await verifyAuth(request);
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: error || 'Unauthorized' }, { status: 401 });
     }
 
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+    const { id } = await params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
         { error: "Invalid order ID format" },
         { status: 400 }
@@ -68,7 +48,7 @@ export async function PATCH(request, { params }) {
 
     await connectDB();
     const order = await Order.findOne({
-      _id: params.id,
+      _id: id,
       userId: user.id,
     });
 
@@ -87,9 +67,12 @@ export async function PATCH(request, { params }) {
     order.status = "cancelled";
     await order.save();
 
+    // Re-fetch the order with populated product data
+    const populatedOrder = await Order.findById(order._id).populate("items.productId");
+
     return NextResponse.json({
       success: true,
-      order,
+      order: populatedOrder,
     });
   } catch (error) {
     console.error("Order cancellation error:", error);

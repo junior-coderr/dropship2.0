@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/db/mongodb";
 import Order from "@/models/Order";
 import { isAdmin } from "@/lib/auth";
 
-export async function GET(request, context) {
+export async function GET(request, { params }) {
   try {
     const adminUser = await isAdmin(request);
     if (!adminUser) {
@@ -15,7 +15,7 @@ export async function GET(request, context) {
 
     await connectDB();
 
-    const { id } = await context.params;
+    const { id } = await params;
     const order = await Order.findById(id).populate(
       "items.productId",
       "name images price"
@@ -51,7 +51,7 @@ export async function PATCH(request, { params }) {
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
     await connectDB();
 
     const order = await Order.findById(id).populate("items.productId");
@@ -75,25 +75,31 @@ export async function PATCH(request, { params }) {
 
     if (!validTransitions[order.status]?.includes(status)) {
       return NextResponse.json(
-        { success: false, error: "Invalid status transition" },
+        {
+          success: false,
+          error: `Invalid status transition from ${order.status} to ${status}`,
+        },
         { status: 400 }
       );
     }
 
     order.status = status;
+    
+    // Set deliveredAt timestamp when order is marked as delivered
+    if (status === "delivered" && !order.deliveredAt) {
+      order.deliveredAt = new Date();
+    }
+    
     await order.save();
-
-    // Fetch updated order with populated fields
-    const updatedOrder = await Order.findById(id).populate("items.productId");
 
     return NextResponse.json({
       success: true,
-      order: updatedOrder,
+      order,
     });
   } catch (error) {
-    console.error("Error updating order status:", error);
+    console.error("Error updating order:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to update order status" },
+      { success: false, error: "Failed to update order" },
       { status: 500 }
     );
   }

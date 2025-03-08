@@ -8,16 +8,39 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isAuthDrawerOpen, setIsAuthDrawerOpen] = useState(false);
   const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check localStorage for existing token
-    const storedToken = localStorage.getItem('auth_token');
-    const storedUser = localStorage.getItem('auth_user');
-    
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-    }
+    const validateAuth = async () => {
+      try {
+        const storedToken = localStorage.getItem('auth_token');
+        const storedUser = localStorage.getItem('auth_user');
+        
+        if (storedToken && storedUser) {
+          // Validate token by making a request to the server
+          const response = await fetch('/api/auth', {
+            headers: {
+              'Authorization': `Bearer ${storedToken}`
+            }
+          });
+          
+          if (response.ok) {
+            setToken(storedToken);
+            setUser(JSON.parse(storedUser));
+          } else {
+            // If token is invalid, clear everything
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('auth_user');
+          }
+        }
+      } catch (error) {
+        console.error('Auth validation error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    validateAuth();
   }, []);
 
   const signIn = (userData, authToken) => {
@@ -38,12 +61,7 @@ export function AuthProvider({ children }) {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
       
-      // Show success toast
       toast.success('Logged out successfully');
-      
-      // Optional: Clear any other app state that needs to be reset
-      // For example, clear cart or user preferences
-      
       return true;
     } catch (error) {
       console.error('Logout error:', error);
@@ -64,7 +82,8 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider 
       value={{ 
         user,
-        token, 
+        token,
+        loading,
         signIn, 
         signOut,
         isAuthDrawerOpen,

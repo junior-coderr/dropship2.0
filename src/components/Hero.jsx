@@ -1,31 +1,37 @@
 'use client';
-import { useState, useEffect, useRef } from 'react'; // Add useRef
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useCountdown } from '@/context/CountdownContext'; // Update import
+import { useCountdown } from '@/context/CountdownContext';
 import { Clock, Fire } from 'phosphor-react';
 import CountdownTimer from './CountdownTimer';
+import { useProducts } from '@/hooks/useProducts';
 
 export default function Hero() {
-  const { countdown } = useCountdown(); // Get countdown from context
+  const { countdown } = useCountdown();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const featuredRef = useRef(null);
-
-  const images = [
-    "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=2070&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?q=80&w=2070&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=2070&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=2070&auto=format&fit=crop"
-  ];
+  const { products } = useProducts({ limit: 5 }); // Fetch 5 products for the hero
+  const [heroImages, setHeroImages] = useState([]);
 
   useEffect(() => {
+    if (products?.length > 0) {
+      // Get images from products that have at least one image
+      const validProducts = products.filter(product => product.images?.[0]?.url);
+      const images = validProducts.map(product => product.images[0].url);
+      setHeroImages(images);
+    }
+  }, [products]);
+
+  useEffect(() => {
+    if (heroImages.length === 0) return;
+    
     const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % images.length);
+      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length);
     }, 5000); // Change image every 5 seconds
 
     return () => clearInterval(interval);
-  }, []);
+  }, [heroImages]);
 
   const scrollToFeatured = (e) => {
     e.preventDefault();
@@ -39,12 +45,12 @@ export default function Hero() {
   return (
     <>
       <div className="relative bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="my-4 sm:my-12">
             <div className="relative h-[420px] sm:h-[650px] rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden">
               <div className="absolute inset-0">
                 <Image
-                  src={images[currentImageIndex]}
+                  src={heroImages[currentImageIndex] || '/placeholder.png'}
                   alt="Featured collection"
                   fill
                   className="object-cover transition-all duration-1000 ease-out"
@@ -80,7 +86,7 @@ export default function Hero() {
                     </p>
                   </div>
 
-                  <a 
+                  <Link 
                     href="#featured-products"
                     onClick={scrollToFeatured}
                     className="group/btn inline-flex items-center px-7 sm:px-10 py-3.5 sm:py-5 bg-white text-brand-black 
@@ -96,14 +102,9 @@ export default function Hero() {
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                  </a>
+                  </Link>
                 </div>
 
-                {/* Remove or comment out the decorative circles if they interfere */}
-                {/* <div className="absolute top-12 right-12 w-28 h-28 border-4 border-white/10 rounded-full"></div>
-                <div className="absolute bottom-12 right-36 w-20 h-20 border-4 border-brand-green/20 rounded-full"></div> */}
-
-                {/* Updated countdown timer with improved mobile layout */}
                 <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6">
                   <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-black/30 backdrop-blur-sm rounded-full">
                     <span className="text-white/90 text-sm font-medium">Ends in:</span>
@@ -114,19 +115,13 @@ export default function Hero() {
                     <CountdownTimer className="text-white/90 text-xs font-medium" />
                   </div>
                 </div>
-
               </div>
-
             </div>
           </div>
-          
-          {/* Remove the old countdown timer section */}
         </div>
       </div>
       
-      {/* Add this section right after the hero */}
       <div ref={featuredRef} id="featured-products" className="scroll-mt-6">
-        {/* Your featured products content will go here */}
       </div>
     </>
   );

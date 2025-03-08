@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import { ShoppingBag, User, Package, SignOut, List, Heart, ChartLine } from 'phosphor-react';
+import { ShoppingBag, User, Package, SignOut, List, Heart, ChartLine, ArrowCounterClockwise } from 'phosphor-react';
 import AuthDrawer from './auth/AuthDrawer';
 import toast from 'react-hot-toast';
 
@@ -126,6 +126,14 @@ export default function Navbar() {
                             <Package size={18} />
                             Orders
                           </Link>
+                          <Link
+                            href="/returns"
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                            onClick={() => setIsDropdownOpen(false)}
+                          >
+                            <ArrowCounterClockwise size={18} />
+                            Returns
+                          </Link>
                           <LogoutButton />
                         </>
                       ) : (
@@ -153,6 +161,14 @@ export default function Navbar() {
                               Admin Dashboard
                             </Link>
                           )}
+                          <Link
+                            href="/returns"
+                            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                            onClick={() => setIsDropdownOpen(false)}
+                          >
+                            <ArrowCounterClockwise size={18} />
+                            Returns
+                          </Link>
                           <LogoutButton />
                         </>
                       ) : (

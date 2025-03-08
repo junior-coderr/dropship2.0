@@ -4,6 +4,7 @@ import { generateToken } from "@/lib/jwt";
 import { connectDB } from "@/lib/db/mongodb";
 import User from "@/models/User";
 import OTP from "@/models/OTP";
+import { isAdmin } from '@/lib/auth';
 
 export async function POST(request) {
   try {
@@ -139,6 +140,30 @@ export async function POST(request) {
     return NextResponse.json(
       { success: false, message: error.message || "Internal server error" },
       { status: 500 }
+    );
+  }
+}
+
+export async function GET(request) {
+  try {
+    const { user, error } = await isAdmin(request);
+    
+    if (!user) {
+      return NextResponse.json({ success: false, error }, { status: 401 });
+    }
+
+    // Remove sensitive data before sending
+    const { password, ...userData } = user.toObject();
+    
+    return NextResponse.json({
+      success: true,
+      user: userData
+    });
+  } catch (error) {
+    console.error('Auth validation error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Authentication failed' },
+      { status: 401 }
     );
   }
 }

@@ -33,7 +33,7 @@ export async function GET(request) {
 
     // Fetch products with pagination
     const products = await Product.find(query)
-      .select("name description price images status") // Select only needed fields
+      .select("name description price images video status") // Added video field
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)

@@ -2,24 +2,28 @@
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { Dialog } from '@headlessui/react';
-import { X, Plus, Trash, Upload } from 'phosphor-react';
+import { X, Plus, Trash, Upload, VideoCamera } from 'phosphor-react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 export default function ProductForm({ isOpen, onClose, product }) {
   const [loading, setLoading] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [formData, setFormData] = useState(
     product || {
       name: '',
       description: '',
       price: '',
       images: [],
-      category: 'uncategorized', // Add default category
+      video: null,
+      category: 'uncategorized', 
       sizeType: 'free',
       sizes: [],
       hasColors: false,
       colors: [],
       bulletPoints: [''],
-      status: 'draft'
+      status: 'draft',
+      inStock: product?.inStock ?? true
     }
   );
 
@@ -77,6 +81,7 @@ export default function ProductForm({ isOpen, onClose, product }) {
     for (const file of files) {
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('fileType', 'image');
 
       try {
         const token = localStorage.getItem('auth_token');
@@ -101,10 +106,65 @@ export default function ProductForm({ isOpen, onClose, product }) {
     }
   };
 
+  const handleVideoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Validate file size client-side as well (50MB limit)
+    const maxSizeVideo = 50 * 1024 * 1024; // 50MB in bytes
+    if (file.size > maxSizeVideo) {
+      toast.error('Video file size exceeds the 50MB limit');
+      return;
+    }
+    
+    setUploadingVideo(true);
+    const videoFormData = new FormData();
+    videoFormData.append('file', file);
+    videoFormData.append('fileType', 'video');
+    
+    try {
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: videoFormData
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Video upload failed');
+      }
+      
+      const data = await res.json();
+      setFormData(prev => ({
+        ...prev,
+        video: {
+          url: data.url,
+          alt: data.alt,
+          filename: data.filename
+        }
+      }));
+      toast.success('Video uploaded successfully');
+    } catch (error) {
+      toast.error(`Video upload failed: ${error.message}`);
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
   const removeImage = (index) => {
     setFormData(prev => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
+
+  const removeVideo = () => {
+    setFormData(prev => ({
+      ...prev,
+      video: null
     }));
   };
 
@@ -292,6 +352,47 @@ export default function ProductForm({ isOpen, onClose, product }) {
                 </div>
               </div>
 
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Status
+                  </label>
+                  <select
+                    name="status"
+                    value={formData.status}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#53D695] focus:border-transparent"
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
+                  </select>
+                </div>
+
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Stock Status
+                  </label>
+                  <div className="flex items-center">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="inStock"
+                        checked={formData.inStock}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          inStock: e.target.checked
+                        }))}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#53D695] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#53D695]"></div>
+                      <span className="ml-3 text-sm font-medium text-gray-700">
+                        {formData.inStock ? 'In Stock' : 'Out of Stock'}
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <div className="flex items-center justify-between">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -341,15 +442,17 @@ export default function ProductForm({ isOpen, onClose, product }) {
                 <div className="grid grid-cols-4 gap-4 mb-4">
                   {formData.images.map((image, index) => (
                     <div key={index} className="relative aspect-square rounded-lg overflow-hidden">
-                      <img
+                      <Image
                         src={image.url}
                         alt={image.alt}
-                        className="object-cover w-full h-full"
+                        fill
+                        sizes="100px"
+                        className="object-cover"
                       />
                       <button
                         type="button"
                         onClick={() => removeImage(index)}
-                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 z-10"
                       >
                         <Trash size={16} />
                       </button>
@@ -376,9 +479,57 @@ export default function ProductForm({ isOpen, onClose, product }) {
                 </div>
               </div>
 
+              {/* Product Video Upload Section */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Product Video
+                </label>
+                <div className="mb-4">
+                  {formData.video ? (
+                    <div className="relative rounded-lg overflow-hidden">
+                      <div className="aspect-video bg-gray-100">
+                        <video
+                          src={formData.video.url}
+                          controls
+                          className="w-full h-full"
+                        >
+                          Your browser does not support the video tag.
+                        </video>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={removeVideo}
+                        className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
+                      >
+                        <Trash size={18} />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="aspect-video rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400 cursor-pointer flex flex-col items-center justify-center">
+                      <input
+                        type="file"
+                        accept="video/mp4,video/webm,video/quicktime"
+                        onChange={handleVideoUpload}
+                        className="hidden"
+                        disabled={uploadingVideo || loading}
+                      />
+                      {uploadingVideo ? (
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#53D695]" />
+                      ) : (
+                        <>
+                          <VideoCamera size={32} className="text-gray-400 mb-2" />
+                          <p className="text-sm text-gray-500">Upload product video</p>
+                          <p className="text-xs text-gray-400 mt-1">MP4, WebM or QuickTime format</p>
+                        </>
+                      )}
+                    </label>
+                  )}
+                </div>
+              </div>
+
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || uploadingVideo}
                 className="w-full py-3 bg-[#53D695] text-white rounded-lg hover:bg-[#53D695]/90 disabled:opacity-50"
               >
                 {loading ? 'Saving...' : 'Save Product'}

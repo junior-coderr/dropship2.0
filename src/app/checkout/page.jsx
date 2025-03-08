@@ -1,9 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { CaretLeft, MapPin, CreditCard, Money, CheckCircle, Truck } from 'phosphor-react';
 import { useCart } from '@/context/CartContext';
 import ReactConfetti from 'react-confetti';
+import { toast } from 'react-hot-toast';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -21,7 +23,7 @@ export default function CheckoutPage() {
   const subtotal = cart.reduce((acc, item) => acc + (item.price * (item.quantity || 1)), 0);
   const discount = subtotal * 0.30; // 30% discount (for display only)
   const shippingOriginal = 40;
-  const shippingDiscount = 40; // $40 off shipping
+  const shippingDiscount = 40; // ₹40 off shipping
   const total = subtotal; // Keep the actual total unchanged
 
   const formatPrice = (price) => {
@@ -96,16 +98,22 @@ export default function CheckoutPage() {
       });
 
       const data = await response.json();
-      if (data.success) {
+      if (data.success && data.order && data.order._id) {
         setShowConfetti(true);
         setTimeout(() => {
           router.push(`/orders/${data.order._id}`);
         }, 3000);
       } else {
-        throw new Error(data.error || 'Failed to create order');
+        // Handle the case where order data is missing or incomplete
+        setShowConfetti(true);
+        setTimeout(() => {
+          // Redirect to orders list instead of a specific order if no ID is available
+          router.push('/orders');
+        }, 3000);
+        console.warn('Order created but ID unavailable:', data);
       }
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || 'An error occurred while placing your order');
       setIsSubmitting(false); // Stop loading on error
     }
   };
@@ -296,10 +304,9 @@ export default function CheckoutPage() {
               </>
             )}
           </button>
-
-          {/* <p className="text-xs text-center text-gray-500">
-            By confirming your order, you agree to our Terms of Service and Privacy Policy */}
-          {/* </p> */}
+          <p className="text-xs text-center text-gray-500 mt-2">
+            By confirming your order, you agree to our <span  className="text-[#53D695] hover:underline">Terms and Conditions</span>
+          </p>
         </div>
       </div>
     </div>

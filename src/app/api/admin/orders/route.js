@@ -80,12 +80,9 @@ export async function PATCH(request) {
 
     await connectDB();
 
-    const order = await Order.findByIdAndUpdate(
-      orderId,
-      { status },
-      { new: true }
-    );
-
+    // Use findById instead of findByIdAndUpdate to ensure pre-save middleware runs
+    const order = await Order.findById(orderId);
+    
     if (!order) {
       return NextResponse.json(
         { success: false, error: "Order not found" },
@@ -93,7 +90,12 @@ export async function PATCH(request) {
       );
     }
 
-    return NextResponse.json({ success: true, order });
+    order.status = status;
+    await order.save();
+
+    // Populate product data before returning
+    const populatedOrder = await Order.findById(order._id).populate("items.productId");
+    return NextResponse.json({ success: true, order: populatedOrder });
   } catch (error) {
     console.error("Error updating order:", error);
     return NextResponse.json(

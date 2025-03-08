@@ -1,67 +1,57 @@
 import "./globals.css";
-import Navbar from '@/components/Navbar';
-import MobileNav from '@/components/MobileNav';
-import { CartProvider } from '@/context/CartContext';
-import { AuthProvider } from '@/context/AuthContext';
 import { Playfair_Display } from 'next/font/google';
 import { Sora, DM_Sans } from 'next/font/google';
-import TopLoader from '@/components/TopLoader';
-import { Toaster } from 'react-hot-toast';
-import { CountdownProvider } from '@/context/CountdownContext';
-import { PopupProvider } from '@/context/PopupContext';
+import ClientProviders from '@/components/ClientProviders';
 
 const playfair = Playfair_Display({ subsets: ['latin'] });
-
 const sora = Sora({
   subsets: ['latin'],
   variable: '--font-sora',
   weight: ['600', '700'],
 });
-
 const dmSans = DM_Sans({
   subsets: ['latin'],
   variable: '--font-dm-sans',
 });
 
 export const metadata = {
-  title: "E-commerce website",
-  description: "E-commerce website",
+  title: "CupidCart | Premium Online Shopping Experience",
+  description: "Find high-quality products with fast shipping and excellent customer support. Your one-stop shopping solution for premium products online.",
+  keywords: "CupidCart, online shopping, e-commerce, fast shipping, premium products, quality items",
+  robots: "index, follow",
+  viewport: "width=device-width, initial-scale=1",
+  openGraph: {
+    title: "CupidCart | Premium Online Shopping Experience",
+    description: "Your reliable shopping partner with curated premium products and fast worldwide shipping",
+    type: "website",
+    url: "/",
+    siteName: "CupidCart",
+    images: [
+      {
+        url: "/Heart Logo Design.png",
+        width: 1200,
+        height: 630,
+        alt: "CupidCart",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CupidCart | Premium Online Shopping Experience",
+    description: "Your reliable shopping partner with curated premium products and fast worldwide shipping",
+    images: ["/Heart Logo Design.png"],
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${sora.variable} ${dmSans.variable} font-dm-sans pb-24 sm:pb-0`}>
-        <PopupProvider>
-          <CountdownProvider>
-            <AuthProvider>
-              <CartProvider>
-                <TopLoader />
-                <Navbar />
-                <main className="container mx-auto px-4 py-8">
-                  {children}
-                </main>
-                <MobileNav />
-                <Toaster 
-                  position="top-center"
-                  toastOptions={{
-                    duration: 3000,
-                    style: {
-                      background: '#333',
-                      color: '#fff',
-                    },
-                    success: {
-                      iconTheme: {
-                        primary: '#53D695',
-                        secondary: '#fff',
-                      },
-                    },
-                  }}
-                />
-              </CartProvider>
-            </AuthProvider>
-          </CountdownProvider>
-        </PopupProvider>
+        <ClientProviders>
+          <main className="container mx-auto px-4 py-8">
+            {children}
+          </main>
+        </ClientProviders>
       </body>
     </html>
   );

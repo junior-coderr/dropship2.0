@@ -1,25 +1,17 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/mongodb";
-import { verifyToken } from "@/lib/jwt";
+import Product from "@/models/Product";
 import Order from "@/models/Order";
 import Cart from "@/models/Cart";
 import User from "@/models/User";
-
-// Helper to verify authentication
-const verifyAuth = (request) => {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null;
-  }
-  const token = authHeader.split(" ")[1];
-  return verifyToken(token);
-};
+import { verifyAuth } from "@/lib/auth";
+import { sendOTP } from "@/lib/twilio";
 
 export async function POST(request) {
   try {
-    const user = verifyAuth(request);
+    const { user, error } = await verifyAuth(request);
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: error || 'Unauthorized' }, { status: 401 });
     }
 
     await connectDB();
@@ -48,19 +40,25 @@ export async function POST(request) {
       );
     }
 
-    // Create order from cart
     const { paymentMethod } = await request.json();
+
+    // Filter out items with null/undefined productId
+    const validCartItems = cart.items.filter(item => item.productId != null);
+    
+    if (validCartItems.length === 0) {
+      return NextResponse.json({ error: "No valid products in cart" }, { status: 400 });
+    }
 
     const order = await Order.create({
       userId: user.id,
-      items: cart.items.map((item) => ({
+      items: validCartItems.map((item) => ({
         productId: item.productId._id,
         quantity: item.quantity,
         price: item.price,
         size: item.size,
         color: item.color,
       })),
-      totalAmount: cart.items.reduce(
+      totalAmount: validCartItems.reduce(
         (total, item) => total + item.price * item.quantity,
         0
       ),
@@ -77,6 +75,30 @@ export async function POST(request) {
     // Clear cart after order creation
     await Cart.findByIdAndDelete(cart._id);
 
+    // Try to send notification, but don't make the order creation dependent on it
+    try {
+      // Find admin user to send notification
+      const adminUser = await User.findOne({ role: 'admin' });
+      console.log('Found admin user:', adminUser ? { 
+        id: adminUser._id, 
+        phone: adminUser.phone ? 'exists' : 'missing' 
+      } : 'no admin found');
+      
+      if (adminUser?.phone) {
+        // Send SMS notification to admin
+        const message = `New order #${order._id.toString().slice(-6)} received! Amount: ₹${order.totalAmount}`;
+        const result = await sendOTP(adminUser.phone, message);
+        console.log('SMS notification result:', result);
+        if (!result.success) {
+          console.error('SMS notification failed:', result.error);
+        }
+      } else {
+        console.error('Admin notification skipped: No admin phone number found');
+      }
+    } catch (error) {
+      console.error('Failed to send admin notification:', error);
+    }
+
     return NextResponse.json({
       success: true,
       order,
@@ -89,9 +111,9 @@ export async function POST(request) {
 
 export async function GET(request) {
   try {
-    const user = verifyAuth(request);
+    const { user, error } = await verifyAuth(request);
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: error || 'Unauthorized' }, { status: 401 });
     }
 
     await connectDB();

@@ -2,9 +2,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { CaretLeft, Package, MapPin, Clock, Money, X } from 'phosphor-react';
+import { CaretLeft, Package, MapPin, Clock, Money, X, ArrowCounterClockwise } from 'phosphor-react';
 import { use } from 'react';
 import { usePopup } from '@/context/PopupContext';
+import ReturnRequestForm from '@/components/ReturnRequestForm';
+// import Link from 'next/link';
 
 export default function OrderDetailPage({ params }) {
   const resolvedParams = use(params);
@@ -13,6 +15,8 @@ export default function OrderDetailPage({ params }) {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const { showPopup } = usePopup();
+  const [showReturnForm, setShowReturnForm] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -32,9 +36,23 @@ export default function OrderDetailPage({ params }) {
         setLoading(false);
       }
     };
-
     fetchOrderDetails();
   }, [resolvedParams.id]);
+
+  // Check if order is eligible for return (delivered within the last 7 days)
+  const isEligibleForReturn = () => {
+    // If order doesn't exist, isn't delivered, or doesn't have deliveredAt timestamp, it's not eligible
+    if (!order || order.status !== 'delivered' || !order.deliveredAt) {
+      return false;
+    }
+    
+    const deliveredDate = new Date(order.deliveredAt);
+    const currentDate = new Date();
+    const daysSinceDelivery = Math.floor((currentDate - deliveredDate) / (1000 * 60 * 60 * 24));
+    
+    // Only allow returns within 7 days of delivery
+    return daysSinceDelivery <= 7;
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -84,6 +102,49 @@ export default function OrderDetailPage({ params }) {
     });
   };
 
+  const handleReturnRequest = (item) => {
+    // Show popup with fee notice before proceeding to return form
+    showPopup({
+      title: 'Return Fee Notice',
+      message: 'Please note that a 40% restocking fee will be charged on all returns. This means you will receive 60% of the item price as refund. Do you wish to proceed?',
+      type: 'warning',
+      confirmText: 'Proceed with Return',
+      cancelText: 'Cancel',
+      onConfirm: () => {
+        setSelectedItem(item);
+        setShowReturnForm(true);
+      }
+    });
+  };
+
+  const handleReturnSuccess = () => {
+    // Refresh the order details to show the return request
+    const fetchOrderDetails = async () => {
+      try {
+        const response = await fetch(`/api/orders/${resolvedParams.id}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          }
+        });
+        const data = await response.json();
+        if (data.success) {
+          setOrder(data.order);
+        }
+      } catch (error) {
+        console.error('Error fetching order details:', error);
+      }
+    };
+    fetchOrderDetails();
+  };
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0
+    }).format(price);
+  };
+
   if (loading) {
     return (
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-6">
@@ -108,6 +169,23 @@ export default function OrderDetailPage({ params }) {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+      {/* Return Form Modal */}
+      {showReturnForm && selectedItem && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="max-w-md w-full">
+            <ReturnRequestForm 
+              orderId={order._id} 
+              item={selectedItem} 
+              onClose={() => {
+                setShowReturnForm(false);
+                setSelectedItem(null);
+              }}
+              onSuccess={handleReturnSuccess}
+            />
+          </div>
+        </div>
+      )}
+      
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <button 
@@ -120,8 +198,29 @@ export default function OrderDetailPage({ params }) {
           Order #{order._id.slice(-6)}
         </h1>
       </div>
-
+      
       <div className="space-y-6">
+        {/* Return eligibility notice - New prominent banner */}
+        {isEligibleForReturn() && (
+          <div className="bg-green-50 border border-green-100 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <div className="bg-green-100 rounded-full p-2 mt-1">
+                <ArrowCounterClockwise size={20} className="text-green-600" />
+              </div>
+              <div>
+                <h3 className="font-medium text-green-800">Returns Available</h3>
+                <p className="text-sm text-green-700 mt-1">
+                  This order is eligible for returns until {new Date(new Date(order.deliveredAt).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}.
+                  Select an item below to request a return.
+                </p>
+                {/* <p className="text-xs text-orange-600 font-medium mt-1">
+                  Note: 40% restocking fee will be charged on all returns.
+                </p> */}
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Order Status */}
         <div className="bg-white rounded-xl border border-gray-100 p-4">
           <div className="flex items-center justify-between mb-4">
@@ -138,26 +237,55 @@ export default function OrderDetailPage({ params }) {
               <Clock size={16} />
               <span>Ordered on {new Date(order.createdAt).toLocaleDateString()}</span>
             </div>
-            {['pending', 'confirmed'].includes(order.status) && (
-              <button
-                onClick={handleCancelOrder}
-                disabled={cancelling}
-                className="flex items-center flex-wrap gap-1 px-0 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
-              >
-                <X size={16} />
-                {cancelling ? 'Cancelling...' : 'Cancel Order'}
-              </button>
-            )}
+            <div className="flex gap-3">
+              {/* {isEligibleForReturn() && (
+                <Link
+                  href="/returns"
+                  className="flex items-center flex-wrap gap-1 px-0 py-1.5 text-sm font-medium text-[#53D695] hover:text-[#43C685]"
+                >
+                  <ArrowCounterClockwise size={16} />
+                  View All Returns
+                </Link>
+              )}
+               */}
+              {['pending', 'confirmed'].includes(order.status) && (
+                <button
+                  onClick={handleCancelOrder}
+                  disabled={cancelling}
+                  className="flex items-center flex-wrap gap-1 px-0 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+                >
+                  <X size={16} />
+                  {cancelling ? 'Cancelling...' : 'Cancel Order'}
+                </button>
+              )}
+            </div>
           </div>
+          
+          {order.deliveredAt && (
+            <div className="mt-2 text-sm text-gray-500 flex items-center gap-2">
+              <Clock size={16} />
+              <span>Delivered on {new Date(order.deliveredAt).toLocaleDateString()}</span>
+            </div>
+          )}
         </div>
-
+        
         {/* Order Items */}
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
           <div className="p-4">
-            <h2 className="font-medium text-gray-900 mb-4">Order Items</h2>
-            <div className="space-y-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="font-medium text-gray-900">Order Items</h2>
+              
+              {isEligibleForReturn() && (
+                <div className="text-xs font-medium text-blue-600 flex items-center">
+                  <ArrowCounterClockwise size={14} className="mr-1" />
+                  Items are eligible for return
+                </div>
+              )}
+            </div>
+            
+            <div className="space-y-5">
               {order.items.map((item) => (
-                <div key={item._id} className="flex gap-4">
+                <div key={item._id} className={`flex gap-4 p-3 rounded-lg ${isEligibleForReturn() && !item.returnRequest ? 'bg-blue-50/30 border border-blue-100' : ''}`}>
                   <div className="relative h-20 w-20 rounded-lg overflow-hidden bg-gray-100">
                     <Image
                       src={item.productId?.images?.[0]?.url || '/placeholder-product.png'} // Add fallback image
@@ -167,22 +295,77 @@ export default function OrderDetailPage({ params }) {
                     />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">{item.productId?.name}</h3>
+                    <div className="flex justify-between flex-col">
+                      <h3 className="font-medium text-gray-900">{item.productId?.name}</h3>
+                      
+                      {/* Return Status */}
+                      
+                    </div>
                     <div className="mt-1 flex items-center gap-4 text-sm text-gray-500">
                       <span>Qty: {item.quantity}</span>
                       {item.size && <span>Size: {item.size}</span>}
                       {item.color && <span>Color: {item.color}</span>}
                     </div>
-                    <div className="mt-2 font-medium text-gray-900">
-                      ${(item.price * item.quantity).toFixed(2)}
+                    <div className="flex justify-between mt-2">
+                      <div className="font-medium text-gray-900">
+                        {formatPrice(item.price * item.quantity)}
+                      </div>
+                      
+                      
+                      {/* Return Button */}
+                      {isEligibleForReturn() && !item.returnRequest && (
+                        <button 
+                          onClick={() => handleReturnRequest(item)}
+                          className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md flex items-center gap-1 transition-colors"
+                        >
+                          <ArrowCounterClockwise size={14} />
+                          Return Item
+                        </button>
+                      )}
                     </div>
+                    {item.returnRequest && (
+                        <div className="text-xs px-2 py-2 my-1 rounded-full bg-blue-100 text-blue-700 font-medium flex items-center">
+                          <ArrowCounterClockwise size={12} className="mr-1" />
+                          Return {item.returnRequest.status}
+                        </div>
+                      )}
+                    
+                    {/* Return Request Details */}
+                    {item.returnRequest && (
+                      <div className="mt-3 bg-blue-50 p-2 rounded-md text-xs">
+                        <div className="flex justify-between items-center text-blue-800">
+                          <span className="font-medium">Return Request Details</span>
+                          <span>{new Date(item.returnRequest.requestedAt).toLocaleDateString()}</span>
+                        </div>
+                        <p className="mt-1 text-blue-700">
+                          UPI ID: {item.returnRequest.upiId}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
           </div>
         </div>
-
+        
+        {/* Return Instructions - New section */}
+        {isEligibleForReturn() && (
+          <div className="bg-white rounded-xl border border-blue-100 p-4">
+            <div className="flex items-center gap-2 mb-3 text-blue-700">
+              <ArrowCounterClockwise size={18} />
+              <h2 className="font-medium">Return Policy</h2>
+            </div>
+            <ul className="text-sm text-gray-600 space-y-1 list-disc pl-5">
+              <li>Items can be returned within 7 days of delivery</li>
+              {/* <li><span className="font-medium text-orange-600">A 40% restocking fee will be charged on all returns</span></li> */}
+              <li>Provide a valid UPI ID for refund processing</li>
+              <li>Refunds are typically processed within 5-7 business days after return approval</li>
+              <li>Items should be in original condition with tags and packaging</li>
+            </ul>
+          </div>
+        )}
+        
         {/* Shipping Address */}
         <div className="bg-white rounded-xl border border-gray-100 p-4">
           <div className="flex items-center gap-2 mb-4">
@@ -190,13 +373,13 @@ export default function OrderDetailPage({ params }) {
             <h2 className="font-medium text-gray-900">Shipping Address</h2>
           </div>
           <div className="text-sm text-gray-500 space-y-1">
-            <p>{order.shippingAddress.street}</p>
+            <p>{order.shippingAddress.houseNumber} {order.shippingAddress.roadName}</p>
             <p>
               {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zipCode}
             </p>
           </div>
         </div>
-
+        
         {/* Payment Details */}
         <div className="bg-white rounded-xl border border-gray-100 p-4">
           <div className="flex items-center gap-2 mb-4">
@@ -212,7 +395,7 @@ export default function OrderDetailPage({ params }) {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Subtotal</span>
-              <span className="text-gray-900">${order.totalAmount.toFixed(2)}</span>
+              <span className="text-gray-900">{formatPrice(order.totalAmount)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Shipping</span>
@@ -222,7 +405,7 @@ export default function OrderDetailPage({ params }) {
               <div className="flex justify-between">
                 <span className="font-medium text-gray-900">Total</span>
                 <span className="font-bold text-gray-900">
-                  ${order.totalAmount.toFixed(2)}
+                  {formatPrice(order.totalAmount)}
                 </span>
               </div>
             </div>
