@@ -30,7 +30,7 @@ export function CartProvider({ children }) {
       const data = await response.json();
       
       if (data.success && data.cart && Array.isArray(data.cart.items)) {
-        console.log('Cart items:', data.cart.items);
+        // console.log('Cart items:', data.cart.items);
         setCart(data.cart.items
           .filter(item => item && item.productId) // Filter out null items
           .map(item => ({

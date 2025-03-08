@@ -26,7 +26,7 @@ export function useProducts({
 
         const response = await fetch(`/api/products?${params}`);
         const data = await response.json();
-        console.log(data);
+        // console.log(data);
 
         if (!data.success) {
           throw new Error(data.message || "Failed to fetch products");

@@ -10,7 +10,7 @@ export function useProduct(productId) {
   useEffect(() => {
     const fetchProduct = async () => {
       // Debug log and validation
-      console.log("Fetching product with ID:", productId);
+      // console.log("Fetching product with ID:", productId);
 
       if (!productId) {
         setError("No product ID provided");
@@ -23,7 +23,7 @@ export function useProduct(productId) {
         const response = await fetch(`/api/products/${productId}`);
         const data = await response.json();
 
-        console.log("API Response:", data);
+        // console.log("API Response:", data);
 
         if (!data.success) {
           throw new Error(data.message || "Failed to fetch product");
