@@ -44,10 +44,11 @@ export default function Hero() {
 
   return (
     <>
-      <div className="relative bg-gray-50">
-        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-          <div className="my-4 sm:my-12">
-            <div className="relative h-[420px] sm:h-[650px] rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden">
+      <div className="relative w-full bg-gray-50">
+        {/* Removed max-w-8xl class to make it full width */}
+        <div className="w-full px-0 py-0">
+          <div className="my-0">
+            <div className="relative h-[420px] sm:h-[650px] overflow-hidden">
               <div className="absolute inset-0">
                 <Image
                   src={heroImages[currentImageIndex] || '/placeholder.png'}
@@ -55,7 +56,7 @@ export default function Hero() {
                   fill
                   className="object-cover transition-all duration-1000 ease-out"
                   priority
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw"
+                  sizes="100vw"
                   quality={90}
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/75 to-black/40"></div>

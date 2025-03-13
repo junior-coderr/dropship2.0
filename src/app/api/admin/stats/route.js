@@ -8,7 +8,7 @@ import { isAdmin } from "@/lib/auth";
 export async function GET(request) {
   try {
     const adminUser = await isAdmin(request);
-    console.log("adminUser", adminUser);
+    // console.log("adminUser", adminUser);
     if (!adminUser) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },

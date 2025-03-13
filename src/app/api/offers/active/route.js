@@ -16,7 +16,7 @@ export async function GET() {
       const newOffer = await Offer.create({
         name: "Daily Special",
         startTime: new Date(),
-        endTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        endTime: new Date(Date.now() + 48 * 60 * 60 * 1000),
         isActive: true,
       });
 

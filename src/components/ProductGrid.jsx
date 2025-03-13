@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { ArrowUpRight } from 'phosphor-react';
 import Link from 'next/link';
 import { useMemo, useEffect } from 'react';
+import RatingStars from './ui/RatingStars';
 
 const DEFAULT_PLACEHOLDER = '/placeholder.png';
 
@@ -160,6 +161,15 @@ export default function ProductGrid() {
               <p className="text-sm text-gray-500 line-clamp-1 font-medium">
                 {product.description}
               </p>
+              
+              {/* Add Rating Stars */}
+              <div className="mt-2">
+                <RatingStars 
+                  rating={product.rating || 0} 
+                  ratingCount={product.ratingCount || 0}
+                  size="sm"
+                />
+              </div>
             </div>
 
             <div className="flex items-center justify-between">

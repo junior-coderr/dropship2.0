@@ -74,6 +74,17 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // Added rating fields
+    rating: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5
+    },
+    ratingCount: {
+      type: Number,
+      default: 0
+    },
   },
   {
     timestamps: true,

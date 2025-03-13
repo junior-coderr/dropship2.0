@@ -47,8 +47,11 @@ export default function Home() {
         `}
       </Script>
       
-      <div className="max-w-7xl mx-auto">
-        <Hero />
+      {/* Hero placed outside the container for full width */}
+      <Hero />
+      
+      {/* Content container for the rest of the page */}
+      <div className="max-w-7xl mx-auto px-4">
         <section className="my-16">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Featured Products</h2>
