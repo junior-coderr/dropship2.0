@@ -8,8 +8,6 @@ import { useParams } from "next/navigation";
 import { useProduct } from '@/hooks/useProduct';
 import { useCountdown } from '@/context/CountdownContext';
 import Head from 'next/head';
-import RatingStars from '@/components/ui/RatingStars';
-// import CountdownTimer from '@/components/CountdownTimer';
 const DEFAULT_PLACEHOLDER = '/placeholder.png';
 
 // Trust feature data
@@ -52,150 +50,102 @@ const uniqueNames = [
   "Krish Sisodia", "Riya Thiruchelvam", "Rohan Viswanathan", "Nisha Balasubramanian"
 ];
 
-// Product category-specific review templates - expanded with more unique options
+// Positive-only product category-specific review templates
 const categoryReviews = {
-  // Clothing reviews - expanded
+  // Clothing reviews - all positive
   clothing: [
     "This fits perfectly! The fabric quality is excellent and the stitching is well done. Very comfortable to wear.",
-    "I like the material, but the sizing runs a bit small. Had to exchange for one size up.",
     "The color is exactly as shown in the pictures. The material feels premium and washes well.",
-    "Nice design but the stitching came loose after just two washes. A bit disappointed with the quality.",
     "Comfortable fit and the fabric feels good on skin. Looks elegant and received many compliments.",
-    "Average quality for the price. Nothing exceptional but does the job.",
-    "The fitting is good but I expected better quality at this price point.",
     "Great for casual wear. Very comfortable and the color hasn't faded even after multiple washes.",
     "The fabric is breathable and perfect for summer. I'm planning to buy in other colors too.",
-    "Stylish design but the fabric wrinkles easily. Need to iron it before each wear.",
     "Perfect for my body type! The cut is flattering and the material feels luxurious.",
-    "The embroidery work is beautiful but the inner lining is a bit rough on skin.",
     "Excellent craftsmanship and attention to detail. Worth every rupee I paid.",
-    "Love the style but the buttons feel flimsy. Hope they last with regular wear.",
     "The fabric blend is comfortable and doesn't cause any irritation even in hot weather.",
     "Sizing was accurate as per the chart. The outfit looks expensive and well-tailored.",
     "Versatile piece that can be dressed up or down. Gets lots of compliments.",
-    "Fabric pilled after just a few wears which was disappointing for the price point.",
     "The outfit looks exactly like in the pictures. Feels well-made and durable.",
     "Perfect for formal occasions. The fit is impeccable and the material is high quality."
   ],
   
-  // Electronics reviews - expanded
+  // Electronics reviews - all positive
   electronics: [
     "Works flawlessly! The battery life is impressive and the performance exceeds expectations.",
-    "Good product but the user manual could be clearer. Took me a while to figure out all features.",
     "The build quality is sturdy and the features work as advertised. Very happy with this purchase.",
-    "It does what it says but nothing extraordinary. Expected more features for this price range.",
-    "Had some initial setup issues but customer service was helpful. Now working perfectly.",
-    "The product is decent but overpriced compared to similar options in the market.",
     "Very intuitive interface and easy to set up. Battery performance is better than expected.",
-    "Quality product but takes longer to charge than mentioned in the specifications.",
     "The sound quality is exceptional! Crystal clear audio even at high volumes.",
-    "The device overheats slightly with extended use. Hope this doesn't affect longevity.",
     "Perfect for my needs - fast processing and responsive controls. Great value purchase.",
-    "The connectivity options are versatile but Bluetooth range could be better.",
     "Sleek design and premium feel. Works seamlessly with all my other devices.",
-    "User interface is intuitive but the app needs some improvements for smoother operation.",
     "Energy efficient and quiet operation. Exactly what I needed for my home setup.",
-    "The smart features are convenient but sometimes there's a slight lag in response.",
     "Excellent picture/display quality with vibrant colors and sharp contrast.",
-    "Has all the features advertised but the companion app crashes occasionally.",
     "Compact design that doesn't compromise on performance. Impressed with the quality control.",
-    "Great functionality but the power cord is shorter than expected, limiting placement options."
+    "Smart features work perfectly and make everyday tasks much easier.",
+    "The camera quality is incredible, capturing details I didn't expect at this price point.",
+    "Setup was straightforward and the user manual was clear and helpful."
   ],
   
-  // Home & Decor reviews - expanded
+  // Home & Decor reviews - all positive
   homeDecor: [
     "This looks absolutely stunning in my living room! The craftsmanship is excellent.",
-    "The item looks nice but is smaller than I expected from the pictures.",
     "Beautiful piece that has elevated the look of my home. Well-made and elegant.",
-    "The quality is good but the color is slightly different from what's shown online.",
     "Exactly what I was looking for. High-quality material and looks expensive.",
-    "It's an okay decoration piece. Nothing special but not bad either.",
     "Adds a nice touch to my home decor. Reasonably priced for the quality.",
-    "Looks good from a distance but the finishing could be better upon close inspection.",
     "The intricate details are beautifully crafted. Gets noticed by every guest who visits.",
-    "Lighter than expected which makes it feel a bit less premium than the images suggested.",
     "Perfect centerpiece for my dining table. The design is timeless and elegant.",
-    "The material is good but the assembly instructions could have been clearer.",
     "Excellent craftsmanship with attention to the smallest details. Worth the investment.",
     "The colors are rich and complement my existing decor beautifully.",
     "Unique design that's become a conversation starter. Very happy with this purchase.",
-    "Good value but arrived with a small scratch. Customer service handled it promptly though.",
     "The texture and finish look much more expensive than the actual price.",
-    "Nice addition to our home but the dimensions in the description weren't entirely accurate.",
     "The handcrafted elements make this piece special. No regrets buying this.",
-    "Elegant design but the base could be more stable. Still a beautiful addition to my home."
+    "Elegant design that immediately elevates the room's appearance."
   ],
   
-  // Beauty & Personal Care reviews - expanded
+  // Beauty & Personal Care reviews - all positive
   beauty: [
     "Amazing product! Saw visible results within a week. Will definitely repurchase.",
-    "It's gentle on my sensitive skin, but I haven't noticed dramatic results yet.",
     "The fragrance is lovely and the product quality is excellent. Highly recommend!",
-    "Works well but I expected more noticeable results for the price point.",
     "Best skincare product I've used! My skin looks and feels so much better.",
-    "Packaging is great but the product is just average. Nothing special to report.",
     "No irritation on my sensitive skin, which is rare. Happy with the purchase overall.",
-    "Decent product but didn't work miracles like some reviews suggested.",
     "The formulation feels luxurious and absorbs quickly without leaving any residue.",
-    "Pleasant texture but the fragrance is stronger than I prefer in skincare products.",
     "Noticed improved skin texture after just two weeks of consistent use.",
-    "Good quality product but the pump dispenser could be designed better.",
     "Perfect for my skin type! Has helped with my concerns without causing breakouts.",
-    "The product claims to be fragrance-free but has a slight chemical smell.",
     "My skin feels hydrated throughout the day. Will be purchasing the full range.",
-    "The ingredients list is impressive but results are taking longer than expected.",
     "Elegant packaging and the product inside lives up to the premium feel.",
-    "No adverse reactions which is a big win for my reactive skin, but results are subtle.",
     "Value for money considering how little product you need for each application.",
-    "Good addition to my routine but not sure it's worth the high price tag."
+    "The natural ingredients have made a noticeable difference to my complexion.",
+    "The applicator is well-designed and makes the product easy to use."
   ],
   
-  // Accessories reviews - expanded
+  // Accessories reviews - all positive
   accessories: [
     "This is so stylish and complements my outfits perfectly! High-quality material too.",
-    "It looks nice but doesn't seem very durable. Hope it lasts longer than it appears.",
     "Elegant design and excellent quality. Gets noticed everywhere I wear it.",
-    "The design is beautiful but the clasp seems a bit flimsy.",
     "Absolutely love this! The craftsmanship is impressive and it looks premium.",
-    "It's a nice accessory but nothing extraordinary for the price.",
-    "Good addition to my collection though the color is slightly different from the images.",
-    "Decent quality but I've seen similar items for less elsewhere.",
     "Versatile design that works with both casual and formal outfits. Great purchase!",
-    "The details are intricate but it's heavier than expected which affects comfort.",
     "Perfect statement piece that elevates even the simplest outfit. Very happy!",
-    "Good craftsmanship but the finish started showing wear sooner than expected.",
     "Unique design that I haven't seen elsewhere. Gets me compliments every time.",
-    "The materials feel premium but the sizing is a bit off from the description.",
     "The attention to detail is impressive. Looks much more expensive than it is.",
-    "Stylish design but the metal tarnishes slightly after regular wear.",
     "Perfectly sized and the adjustable features make it comfortable to wear all day.",
-    "Beautiful piece though the colors aren't exactly as vibrant as shown online.",
     "Exceeded my expectations in terms of quality and design. Worth every rupee.",
-    "Looks elegant but needs more careful handling than I anticipated."
+    "The finishing touches show real attention to craftsmanship and quality.",
+    "Lightweight yet durable, perfect for everyday wear without sacrificing style.",
+    "The clasp is secure and well-designed - no worries about losing it."
   ],
   
-  // Default/General reviews - expanded
+  // Default/General reviews - all positive
   default: [
     "Great purchase! The quality is excellent and it arrived in perfect condition.",
-    "It's okay. Not bad but not exceptional either. Does the job though.",
     "Very satisfied with this purchase. The quality exceeded my expectations.",
-    "Decent product but I expected better quality at this price point.",
     "Love everything about this! Would definitely recommend to friends and family.",
-    "The product is functional but doesn't have that wow factor I was expecting.",
     "Excellent value for money. Very happy with my purchase.",
-    "It meets basic requirements but lacks some finishing touches.",
     "The product performs exactly as described. No complaints whatsoever.",
-    "Average quality for the price range. Nothing stands out particularly.",
     "Surprisingly good quality considering the reasonable price point.",
-    "Does what it's supposed to do but the build quality could be better.",
     "Exceeded my expectations in every way. Will definitely purchase again.",
-    "Good product overall but the delivery took longer than expected.",
-    "The functionality is great but the aesthetics could be improved.",
-    "Happy with my purchase though there's room for improvement in some aspects.",
     "Perfect for my needs and arrived sooner than expected. Great service!",
-    "Reasonably good product but not sure it justifies the premium pricing.",
     "Well-designed and practical. Makes my life easier which is what I wanted.",
-    "Functions adequately but lacks the premium feel suggested by the images."
+    "High quality product that performs better than expected. Very satisfied!",
+    "The attention to detail is impressive. Five stars all the way.",
+    "Easy to use and works perfectly. Definitely worth the investment."
   ]
 };
 
@@ -535,6 +485,26 @@ export default function ProductDetail() {
     }
   };
 
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [reviewText, setReviewText] = useState('');
+  const [reviewName, setReviewName] = useState('');
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
+
+  const handleReviewSubmit = (e) => {
+    e.preventDefault();
+    // In a real app, this would send the review to the backend
+    console.log('Review submitted:', { name: reviewName, comment: reviewText });
+    setReviewSubmitted(true);
+    
+    // Reset form and close modal after 2 seconds
+    setTimeout(() => {
+      setReviewText('');
+      setReviewName('');
+      setReviewSubmitted(false);
+      setIsReviewModalOpen(false);
+    }, 2000);
+  };
+
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto animate-pulse">
@@ -765,15 +735,6 @@ export default function ProductDetail() {
             <div>
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{product.name}</h2>
               
-              {/* Add Rating Stars below product title */}
-              <div className="mt-2 mb-3">
-                <RatingStars 
-                  rating={product.rating || 0} 
-                  ratingCount={product.ratingCount || 0}
-                  size="md"
-                />
-              </div>
-              
               <div className="flex items-baseline gap-4 mb-6 mt-3">
                 <span className="text-3xl font-bold">{formatPrice(product.price)}</span>
                 {product.discountedPrice && (
@@ -864,7 +825,7 @@ export default function ProductDetail() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">Free Delivery</p>
-                    <p className="text-sm text-[#53D695] font-medium truncate">8-10 business days</p>
+                    {/* <p className="text-sm text-[#53D695] font-medium truncate"></p> */}
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-3 rounded-xl border border-gray-100">
@@ -929,7 +890,48 @@ export default function ProductDetail() {
             </div>
           </div>
         </div>
-
+        
+        {/* Vertical Product Images Gallery - Added to make page lengthier */}
+        <div className="mt-16 pt-8 border-t border-gray-100">
+          <h3 className="text-xl font-bold text-gray-900 text-center mb-8">Product Gallery</h3>
+          
+          <div className="flex flex-col items-center gap-6 md:gap-10">
+            {product?.images?.map((image, index) => (
+              <div key={index} className="w-full max-w-2xl relative">
+                <div className="relative aspect-square w-full overflow-hidden bg-gray-100 rounded-2xl shadow-md">
+                  <Image
+                    src={image.url || DEFAULT_PLACEHOLDER}
+                    alt={`${product.name} - Image ${index + 1}`}
+                    fill
+                    className="object-contain"
+                    sizes="(max-width: 640px) 90vw, (max-width: 1024px) 70vw, 672px"
+                  />
+                </div>
+                <div className="absolute top-4 right-4 bg-black/60 text-white text-xs font-semibold px-2 py-1 rounded-md backdrop-blur-sm">
+                  {index + 1} / {product.images.length}
+                </div>
+              </div>
+            ))}
+            
+            {/* Video if available */}
+            {product?.video && product.video.url && (
+              <div className="w-full max-w-2xl">
+                <div className="relative aspect-video w-full overflow-hidden bg-gray-100 rounded-2xl shadow-md">
+                  <video
+                    src={product.video.url}
+                    controls
+                    preload="metadata"
+                    poster={product.images?.[0]?.url}
+                    className="w-full h-full object-contain"
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        
         {/* Trust Features Section */}
         <div className="mt-16 pt-8 border-t border-gray-100">
           <h3 className="text-xl font-bold text-gray-900 text-center mb-8">Why Shop With CupidCart</h3>
@@ -949,8 +951,18 @@ export default function ProductDetail() {
 
         {/* Customer Reviews Section */}
         <div className="mt-16 pt-8 border-t border-gray-100">
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Customer Feedback</h3>
-          <p className="text-gray-500 mb-8">Real experiences from verified buyers</p>
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Customer Feedback</h3>
+              <p className="text-gray-500">Real experiences from verified buyers</p>
+            </div>
+            <button 
+              onClick={() => setIsReviewModalOpen(true)}
+              className="px-4 py-2 bg-[#53D695] text-white rounded-full font-medium hover:bg-[#53D695]/90 transition-colors"
+            >
+              Write a Review
+            </button>
+          </div>
           
           <div className="space-y-6">
             {productReviews.map((review, index) => (
@@ -958,7 +970,6 @@ export default function ProductDetail() {
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <h4 className="font-bold text-gray-900">{review.name}</h4>
-                    <div className="h-1"></div>
                   </div>
                   <div className="bg-green-50 px-2 py-1 rounded-md">
                     <p className="text-xs text-green-700 font-medium">Verified Purchase</p>
@@ -973,11 +984,75 @@ export default function ProductDetail() {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#53D695]/10 rounded-full text-[#53D695] font-medium">
               <span>Customer Satisfaction</span>
               <span className="bg-[#53D695] text-white px-2 py-0.5 rounded-md text-xs font-bold">
-                98%
+                100%
               </span>
             </div>
           </div>
         </div>
+        
+        {/* Review Modal */}
+        {isReviewModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 relative">
+              <button 
+                onClick={() => setIsReviewModalOpen(false)}
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+              >
+                <X size={24} />
+              </button>
+              
+              {reviewSubmitted ? (
+                <div className="py-8 text-center">
+                  <div className="mb-4 mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Thank You!</h3>
+                  <p className="text-gray-600">Your review has been submitted successfully.</p>
+                </div>
+              ) : (
+                <>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">Write a Review</h3>
+                  <form onSubmit={handleReviewSubmit}>
+                    <div className="mb-4">
+                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
+                      <input
+                        type="text"
+                        id="name"
+                        value={reviewName}
+                        onChange={(e) => setReviewName(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#53D695] focus:border-[#53D695] outline-none"
+                        placeholder="Enter your name"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="mb-6">
+                      <label htmlFor="review" className="block text-sm font-medium text-gray-700 mb-1">Your Review</label>
+                      <textarea
+                        id="review"
+                        value={reviewText}
+                        onChange={(e) => setReviewText(e.target.value)}
+                        rows={4}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[#53D695] focus:border-[#53D695] outline-none"
+                        placeholder="Share your experience with this product..."
+                        required
+                      ></textarea>
+                    </div>
+                    
+                    <button
+                      type="submit"
+                      className="w-full py-3 bg-[#53D695] text-white font-medium rounded-full hover:bg-[#53D695]/90 transition-colors"
+                    >
+                      Submit Review
+                    </button>
+                  </form>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

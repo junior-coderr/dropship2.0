@@ -67,7 +67,7 @@ src="https://www.facebook.com/tr?id=925512732989578&ev=PageView&noscript=1"
       </head>
       <body className={`${sora.variable} ${dmSans.variable} font-dm-sans pb-24 sm:pb-0`}>
         <ClientProviders>
-          <main className="container mx-auto px-4 py-8">
+          <main>
             {children}
           </main>
         </ClientProviders>

@@ -45,9 +45,8 @@ export default function Hero() {
   return (
     <>
       <div className="relative w-full bg-gray-50">
-        {/* Removed max-w-8xl class to make it full width */}
-        <div className="w-full px-0 py-0">
-          <div className="my-0">
+        <div className="w-full m-0 p-0 flex justify-center">
+          <div className="w-full max-w-7xl my-0"> {/* Changed from max-w-8xl to max-w-7xl */}
             <div className="relative h-[420px] sm:h-[650px] overflow-hidden">
               <div className="absolute inset-0">
                 <Image
