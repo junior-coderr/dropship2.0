@@ -304,9 +304,9 @@ export default function CheckoutPage() {
               </>
             )}
           </button>
-          <p className="text-xs text-center text-gray-500 mt-2">
+          {/* <p className="text-xs text-center text-gray-500 mt-2">
             By confirming your order, you agree to our <span  className="text-[#53D695] hover:underline">Terms and Conditions</span>
-          </p>
+          </p> */}
         </div>
       </div>
     </div>

@@ -9,9 +9,12 @@ export function AuthProvider({ children }) {
   const [isAuthDrawerOpen, setIsAuthDrawerOpen] = useState(false);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const validateAuth = async () => {
+      setIsLoading(true);
       try {
         const storedToken = localStorage.getItem('auth_token');
         const storedUser = localStorage.getItem('auth_user');
@@ -37,6 +40,7 @@ export function AuthProvider({ children }) {
         console.error('Auth validation error:', error);
       } finally {
         setLoading(false);
+        setIsLoading(false);
       }
     };
 
@@ -84,11 +88,15 @@ export function AuthProvider({ children }) {
         user,
         token,
         loading,
+        isAuthenticated,
+        isLoading,
         signIn, 
         signOut,
         isAuthDrawerOpen,
         openAuthDrawer,
-        closeAuthDrawer
+        closeAuthDrawer,
+        setUser,
+        setIsAuthenticated
       }}
     >
       {children}

@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Package, ShoppingBag, ChartLine, SignOut, Headset, ArrowCounterClockwise } from 'phosphor-react';
+import { Package, ShoppingBag, ChartLine, SignOut, Headset, ArrowCounterClockwise, ChartPie } from 'phosphor-react';
 import { useAuth } from '@/context/AuthContext';
 
 const navItems = [
@@ -10,6 +10,7 @@ const navItems = [
   { name: 'Orders', href: '/admin/orders', icon: ShoppingBag },
   { name: 'Returns', href: '/admin/returns', icon: ArrowCounterClockwise },
   { name: 'Support', href: '/admin/support', icon: Headset },
+  { name: 'Analytics', href: '/admin/analytics', icon: ChartPie },
 ];
 
 export function AdminSidebar({ onItemClick }) {

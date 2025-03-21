@@ -8,6 +8,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import MobileNav from '@/components/MobileNav';
 import { Toaster } from 'react-hot-toast';
+import AnalyticsTracker from './AnalyticsTracker';
 
 export default function ClientProviders({ children }) {
   return (
@@ -36,6 +37,7 @@ export default function ClientProviders({ children }) {
                 },
               }}
             />
+            <AnalyticsTracker />
           </CartProvider>
         </AuthProvider>
       </CountdownProvider>
